@@ -3,6 +3,10 @@ import chisel3._
 import chisel3.core.Input
 import chisel3.iotesters.PeekPokeTester
 
+/**
+  DaisyGrids hold n daisyVecs. Unlike the daisyVecs, daisyGrids have a select signal for selecting
+  which daisyVec to work on, but these daisyVecs can not be controlled from the outside.
+  */
 class daisyGrid(rows: Int, cols: Int, dataWidth: Int) extends Module{
 
   val io = IO(new Bundle {
@@ -10,7 +14,6 @@ class daisyGrid(rows: Int, cols: Int, dataWidth: Int) extends Module{
     val readEnable = Input(Bool())
     val dataIn     = Input(UInt(dataWidth.W))
     val readRow    = Input(UInt(8.W))
-    // val reset      = Input(Bool())
 
     val dataOut    = Output(UInt(dataWidth.W))
   })

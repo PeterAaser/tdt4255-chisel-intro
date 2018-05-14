@@ -3,6 +3,9 @@ import chisel3._
 import chisel3.core.Input
 import chisel3.iotesters.PeekPokeTester
 
+/**
+  DaisyVectors are not indexed. They have no control inputs or outputs, only data.
+  */
 class daisyVector(elements: Int, dataWidth: Int) extends Module{
 
   val io = IO(new Bundle {
