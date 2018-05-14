@@ -39,7 +39,7 @@ class daisyMultiplier(val rowsA: Int, val colsA: Int, val rowsB: Int, val colsB:
   /// We transpose matrix B. This means that if both matrices read the same input
   /// stream then they will end up transposed.
   val matrixA = Module(new daisyGrid(rowsA, colsA, dataWidth)).io
-  valAt least four users, including myself, are having an issue with update-initramfs hanging while updating ubuntu 16.04. The bug has been documented while attempting an update to multiple kernel versions ( 4.4.0-24, 4.4.0-62, 4.4.0-63). The bug causes any apt-get update or install to fail, and may also lead to an unbootable system. matrixB = Module(new daisyGrid(colsB, rowsB, dataWidth)).io
+  val matrixB = Module(new daisyGrid(colsB, rowsB, dataWidth)).io
 
   matrixA.dataIn := io.dataInA
   matrixA.readEnable := io.readEnableA
