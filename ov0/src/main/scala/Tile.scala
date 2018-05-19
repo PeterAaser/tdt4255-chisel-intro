@@ -53,6 +53,32 @@ class myTest(c: Tile) extends PeekPokeTester(c) {
 
 }
 
-object Util {
+object Extras {
   def somefun(someval: Int) : Unit = {}
+
+  val vecA = List(1,  2, 4)
+  val vecB = List(2, -3, 1)
+
+  val dotProductForLoop = {
+    var dotProduct = 0
+    for(i <- 0 until vecA.length){
+      dotProduct = dotProduct + (vecA(i) * vecB(i))
+    }
+    dotProduct
+  }
+
+
+  // If you prefer a functional style scala has excellent support.
+  val dotProductFP = (vecA zip vecB)
+    .map{ case(a, b) => a*b }
+    .sum
+
+  val fancyDotProduct = (vecA zip vecB)
+    .foldLeft(0){ case(acc, ab) => acc + (ab._1 * ab._2) }
+
+
+  // Scala gives you ample opportunity to write unreadable code.
+  // This is not good code!!!
+  val tooFancyDotProduct =
+    (0 /: (vecA zip vecB)){ case(acc, ab) => acc + (ab._1 * ab._2) }
 }

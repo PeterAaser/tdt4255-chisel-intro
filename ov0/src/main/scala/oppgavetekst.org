@@ -1,0 +1,44 @@
+* Excercise Zero
+  The goal of this excercise is to gain some familiarity with developing for 
+  FPGAs using chisel. 
+  In this exercise you will implement a circuit capable of performing matrix 
+  matrix multiplication in the chisel hardware description language.
+
+* Matrix matrix multiplication
+  When designing digital logic you should always start with decomposition.
+  Your first task is therefore to implement a dot product calculator, since 
+  a matrix matrix multiplication is essentially a series of these.
+  
+* Dot Product calculator
+  First, let's consider how a dot product calculator would look like in regular
+  scala:
+  
+  #+begin_src scala
+
+    val vecA = List(1,  2, 4)
+    val vecB = List(2, -3, 1)
+
+    val dotProductForLoop = {
+      var dotProduct = 0
+      for(i <- 0 until vecA.length){
+        dotProduct = dotProduct + (vecA(i) * vecB(i))
+      }
+      dotProduct
+    }
+
+    // Scala has rich support for functional programming
+    val dotProductFP = (vecA zip vecB)
+      .map{ case(a, b) => a*b }
+      .sum
+  #+end_src
+
+  In the for loop version you can see how the dot product is sequentially
+  calculated by multiplying vector values of the same indice and summing the
+  result.
+  
+  The dot product for loop works in a similar fashion to your first design, but
+  before you get there some basics are in order.
+  
+* Your first component
+  There are two types of digital components: Combinatorial and stateful.
+  

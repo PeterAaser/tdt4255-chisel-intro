@@ -1,6 +1,9 @@
 * Thoughts
   For RISC-V bruk SODOR, finn på chisel sia
   
+* Doing
+  Finn ut hvordan bundles, defs etc burde fungere.
+  
 * Now
 ** TODO Port Babby to chisel3
 *** DONE compile and run
@@ -40,3 +43,5 @@
 *** Kombiner til en parametriserbar matrise, med medfølgende tester.
 *** Instansier to matriser
 *** Multipliser dem
+    
+    
