@@ -13,7 +13,7 @@ class daisyGrid(rows: Int, cols: Int, dataWidth: Int) extends Module{
 
     val readEnable = Input(Bool())
     val dataIn     = Input(UInt(dataWidth.W))
-    val readRow    = Input(UInt(8.W))
+    val rowSelect    = Input(UInt(8.W))
 
     val dataOut    = Output(UInt(dataWidth.W))
   })
@@ -25,6 +25,13 @@ class daisyGrid(rows: Int, cols: Int, dataWidth: Int) extends Module{
   val elements = rows*cols
 
 
+  /**
+    Your implementation here
+    */
+
+  /**
+    LF
+    */
   io.dataOut := 0.U
 
   for(ii <- 0 until rows){
@@ -32,27 +39,9 @@ class daisyGrid(rows: Int, cols: Int, dataWidth: Int) extends Module{
     memRows(ii).readEnable := 0.U
     memRows(ii).dataIn := io.dataIn
 
-    when(io.readRow === ii.U ){
+    when(io.rowSelect === ii.U ){
       memRows(ii).readEnable := io.readEnable
       io.dataOut := memRows(ii).dataOut
     }
-  }
-}
-
-class daisyGridTest(c: daisyGrid) extends PeekPokeTester(c) {
-
-  poke(c.io.readEnable, 1)
-  for(ii <- 0 until 12){
-    poke(c.io.dataIn, ii)
-    poke(c.io.readRow, ii/3)
-    step(1)
-    println("////////////////////")
-  }
-  poke(c.io.readEnable, 0)
-  for(ii <- 0 until 12){
-    peek(c.io.dataOut)
-    poke(c.io.readRow, ii/3)
-    step(1)
-    println("////////////////////")
   }
 }

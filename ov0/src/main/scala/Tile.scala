@@ -6,12 +6,9 @@ import chisel3.iotesters.PeekPokeTester
 
 object CoreMain {
   def main(args: Array[String]): Unit = {
-    // chiselMainTest(args, () => Module(new daisyVector(4, 32))) { c => new daisyVectorTest(c) }
-    // chiselMainTest(args, () => Module(new daisyGrid(4, 3, 32))) { c => new daisyGridTest(c) }
-    // chiselMainTest(args, () => Module(new daisyMultiplier(3, 2, 2, 3, 32))) { c => new daisyMultiplierTest(c) }
 
-    iotesters.Driver.execute(args, () => new daisyMultiplier(3, 2, 2, 3, 32)) {
-      c => new daisyMultiplierTest(c)
+    iotesters.Driver.execute(args, () => new mySelector(10)){
+      c => new mySelectorTest(c)
     }
   }
 }
@@ -59,7 +56,7 @@ object Extras {
   val vecA = List(1,  2, 4)
   val vecB = List(2, -3, 1)
 
-  val dotProductForLoop = {
+  def dotProductForLoop(vecA: List[Int], vecB: List[Int]) = {
     var dotProduct = 0
     for(i <- 0 until vecA.length){
       dotProduct = dotProduct + (vecA(i) * vecB(i))
@@ -81,4 +78,25 @@ object Extras {
   // This is not good code!!!
   val tooFancyDotProduct =
     (0 /: (vecA zip vecB)){ case(acc, ab) => acc + (ab._1 * ab._2) }
+
+
+  type Matrix[A] = List[List[A]]
+  def vectorMatrixMultiply(vec: List[Int], matrix: Matrix[Int]): List[Int] = {
+    val transposed = matrix.transpose
+
+    val outputVector = Array.ofDim[Int](vec.length)
+    for(ii <- 0 until matrix.length){
+      outputVector(ii) = dotProductForLoop(vec, transposed(ii))
+    }
+    outputVector.toList
+  }
+
+
+  val vec = List(1, 0, 1)
+  val matrix = List(
+    List(2, 1, 2),
+    List(3, 2, 3),
+    List(4, 1, 1)
+  )
+  println(vectorMatrixMultiply(vec, matrix))
 }

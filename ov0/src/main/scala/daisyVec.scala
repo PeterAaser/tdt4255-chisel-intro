@@ -17,7 +17,7 @@ class daisyVector(elements: Int, dataWidth: Int) extends Module{
 
   val currentIndex = RegInit(UInt(8.W), 0.U)
 
-  val memory = Array.fill(elements)(Reg(UInt(dataWidth.W)))
+  val memory = Array.fill(elements)(RegInit(UInt(dataWidth.W), 0.U))
 
   when(currentIndex === (elements - 1).U ){
     currentIndex := 0.U
@@ -35,23 +35,5 @@ class daisyVector(elements: Int, dataWidth: Int) extends Module{
       }
       io.dataOut := memory(ii)
     }
-  }
-}
-
-class daisyVectorTest(c: daisyVector) extends PeekPokeTester(c) {
-
-  poke(c.io.readEnable, 1)
-  step(1)
-
-  for(ii <- 0 until 4){
-    poke(c.io.dataIn, ii)
-    println("////////////////////")
-    step(1)
-  }
-
-  poke(c.io.readEnable, 0)
-  for(ii <- 0 until 4){
-    peek(c.io.dataOut)
-    step(1)
   }
 }

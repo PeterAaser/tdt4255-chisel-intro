@@ -4,12 +4,142 @@
   In this exercise you will implement a circuit capable of performing matrix 
   matrix multiplication in the chisel hardware description language.
 
+* Your first component
+  There are two types of digital components: Combinatorial and stateful.
+  The first component we will consider is a simple combinatorial incrementor:
+  
+  #+begin_src scala
+    class myIncrement(incrementBy: Int) extends Module {
+      val io = IO(
+        new Bundle {
+          val dataIn  = Input(UInt(32.W))
+          val dataOut = Output(UInt(32.W))
+        }
+      )
+
+      io.dataOut := io.dataIn + incrementBy.U
+  #+end_src
+  
+  Let's break the code down down. First, myIncrement is a Module, meaning that
+  this class can be instantiated as a hardware circuit.
+  Figure [rm3] shows the model that you have just declared.
+  A 32 bit signal, data_in goes in, and another 32 bit signal goes out.
+  
+  Apart from the IO, there is only one statement, assigning dataOut to dataIn + 
+  incrementBy.
+  
+  In RTL the component looks like fig [rm4]
+  
+  Let's see how we can use our module:
+  #+begin_src scala
+    class myIncrementTwice(incrementBy: Int) extends Module {
+      val io = IO(
+        new Bundle {
+          val dataIn  = Input(UInt(32.W))
+          val dataOut = Output(UInt(32.W))
+        }
+      )
+
+      val first  = Module(new myIncrement(incrementBy))
+      val second = Module(new myIncrement(incrementBy))
+
+      first.io.dataIn  := io.dataIn
+      second.io.dataIn := first.io.dataOut
+
+      io.dataOut := second.io.dataOut
+    }
+  #+end_src
+  
+  Fig [rm5] shows the RTL design, as expected it's just two incrementors 
+  chained.
+  
+  The following code shows off how you can use for loops to instantiate an
+  arbitrary amount of modules.
+  #+begin_src scala
+    class myIncrementN(incrementBy: Int, numIncrementors: Int) extends Module {
+      val io = IO(
+        new Bundle {
+          val dataIn  = Input(UInt(32.W))
+          val dataOut = Output(UInt(32.W))
+        }
+      )
+
+      val incrementors = Array.fill(numIncrementors){ Module(new myIncrement(incrementBy)) }
+
+      for(ii <- 1 until numIncrementors){
+        incrementors(ii).io.dataIn := incrementors(ii - 1).io.dataOut
+      }
+
+      incrementors(0).io.dataIn := io.dataIn
+      io.dataOut := incrementors(numIncrementors).io.dataOut
+    }
+  #+end_src
+  Keep in mind that the for-loop only exists at design time, just like a for loop
+  generating a table in HTML will not be part of the finished HTML.
+  
+  So, what does combinatorial mean?
+  To answer that, let's create a stateful circuit first.
+
+  #+begin_src scala
+    class myDelay() extends Module {
+      val io = IO(
+        new Bundle {
+          val dataIn  = Input(UInt(32.W))
+          val dataOut = Output(UInt(32.W))
+        }
+      )
+      val delayReg = RegInit(UInt(32.W), 0.U)
+
+      delayReg   := io.dataIn
+      io.dataOut := delayReg
+    }
+  #+end_src
+  
+  This circuit seems rather pointless, it simply assigns the input to the output.
+  However, the register has another input, as seen in the RTL: fig [rm6].
+  The register can only change value during rising edges on the clock!
+  
+  To examplify, assume at step 0 data in is 0x45. 
+  delayReg will now have 0x45 as its data in, but data out will still be 0.
+  Only when the clock ticks will delayReg.dataOut take on the value 0x45.
+  
+  You should now be able to implement myDelayN following the same principles as
+  myIncrementN
+  
+  #+begin_src scala
+    class myDelayN(delay: Int) extends Module {
+      val io = IO(
+        new Bundle {
+          val dataIn  = Input(UInt(32.W))
+          val dataOut = Output(UInt(32.W))
+        }
+      )
+    
+      ???
+    }
+  #+end_src
+
+  This should answer the initial question of combinatorial vs stateful: 
+  The output of a combinatorial circuit will be available instantly, while 
+  a stateful circuit will only update its output during rising edges on the 
+  clock.
+  
+  Before you continue it is recommended that you check out the chisel3
+  tutorials.
+  
+  In the basics.scala there is one more module, a basic selector.
+  At compile time this component builds n random numbers, to see which we can
+  cycle through them.
+  The component comes with a test, this test will be run when you do sbt.run
+  You should study this component. What is the difference between if/else and 
+  when/otherwise?
+  
 * Matrix matrix multiplication
   When designing digital logic you should always start with decomposition.
   Your first task is therefore to implement a dot product calculator, since 
   a matrix matrix multiplication is essentially a series of these.
   
-* Dot Product calculator
+* Dot Prod
   First, let's consider how a dot product calculator would look like in regular
   scala:
   
@@ -25,20 +155,69 @@
       }
       dotProduct
     }
-
-    // Scala has rich support for functional programming
-    val dotProductFP = (vecA zip vecB)
-      .map{ case(a, b) => a*b }
-      .sum
   #+end_src
 
-  In the for loop version you can see how the dot product is sequentially
+  In the for loop you can see how the dot product is sequentially
   calculated by multiplying vector values of the same indice and summing the
   result.
   
-  The dot product for loop works in a similar fashion to your first design, but
-  before you get there some basics are in order.
+  To implement this logic in hardware the first thing you need is some way to
+  represent a vector which is your first task.
   
-* Your first component
-  There are two types of digital components: Combinatorial and stateful.
-  
+** Task 1 - Vector
+   The first component you should implement is a register bank for storing a vector.
+   This module works as follows:
+   
+   let dataOut(T) = if (T - vectorLength) < 0 then 0 else
+                      if enableIn(T - vectorLength) 
+                        then dataIn(T - vectorLength)
+                      else
+                        dataOut(T - vectorLength)
+                        
+   From the figure the principle of operation becomes clearer [inkskape drawing, rm sketch]
+   
+   To test your implementation you can run testOnly Core.daisyVecSpec in sbt
+   
+   
+** Task 2 - Dot Product
+   Your next task is to implement daisyDot.
+   daisyDot should calculate the dot product of two vectors, inA and inB. Ensure that validOut
+   is only asserted when you have a result. Ensure that your accumulator gets flushed after 
+   calculating your dot product.
+
+** Task 3 - Vector Matrix multiplication
+   Having implemented a dot product calculator, a vector matrix multiplier is not that different.
+   In imperative code we get something like this:
+   
+   #+begin_src scala
+   type Matrix[A] = List[List[A]]
+   def vectorMatrixMultiply(vec: List[Int], matrix: Matrix[Int]): List[Int] = {
+     val transposed = matrix.transpose
+ 
+     val outputVector = Array.ofDim[Int](vec.length)
+     for(ii <- 0 until matrix.length){
+       outputVector(ii) = dotProductForLoop(vec, transposed(ii))
+     }
+     outputVector.toList
+   }
+   #+end_src scala
+   
+   This is just repeated application of dotProduct.
+   Since vector matrix multiplication is the dotproduct of the vector and the rows of the matrix,
+   the matrix must be transposed.
+   
+*** Subtask 1 - representing a matrix
+    Like the dot product calculator, the first step is to implement a register bank for storing a matrix.
+    This can be done by creating n vectors from Task 1 and then select which row is the 'current' row.
+    
+    The matrix representation you have created in this task allows you to select which row to read, but 
+    not which column. This isn't very efficient when you want to read an entire column since you would have
+    to wait a full cycle for each row.
+    The way we deal with this is noticing that when multiplying two matrices we work on a row basis in 
+    matrix A, and column basis on matrix B. If we simply transpose matrix B, then accessing its rows is 
+    the same as accessing the columns of matrix B.
+    
+    A consequence of this is that the API exposed by your matrix multiplier requires matrix B to be transposed.
+
+*** Subtask 2 - vector matrix multiplication
+    

@@ -32,7 +32,6 @@ class daisyMultiplier(val rowsA: Int, val colsA: Int, val rowsB: Int, val colsB:
 
   val resultReady      = RegInit(Bool(), false.B)
 
-  println(s"rowsA: $rowsA, colsA: $colsA, rowsB: $rowsB, colsB: $colsB")
 
   ////////////////////////////////////////
   ////////////////////////////////////////
@@ -85,12 +84,12 @@ class daisyMultiplier(val rowsA: Int, val colsA: Int, val rowsB: Int, val colsB:
   ////////////////////////////////////////
   /// set up reading patterns depending on if we are in calculating state or not
   when(calculating === true.B){
-    matrixA.readRow := rowOutputCounter
+    matrixA.rowSelect := rowOutputCounter
   }.otherwise{
-    matrixA.readRow := rowCounter
+    matrixA.rowSelect := rowCounter
   }
 
-  matrixB.readRow := rowCounter
+  matrixB.rowSelect := rowCounter
 
 
 

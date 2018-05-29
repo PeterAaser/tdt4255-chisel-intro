@@ -5,7 +5,7 @@
   Finn ut hvordan bundles, defs etc burde fungere.
   
 * Now
-** TODO Port Babby to chisel3
+** DONE Port Babby to chisel3
 *** DONE compile and run
 *** DONE fix deprecation
     
