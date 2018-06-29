@@ -101,8 +101,10 @@ class mySelector(numValues: Int) extends Module {
   val counter = RegInit(UInt(Chisel.log2Up(numValues).W), 0.U)
   val nextOutputIsFresh = RegInit(Bool(), true.B)
 
-  // Generate random values. Using the when keyword we choose which random
-  // value should drive the dataOut signal
+  /**
+    Generate random values. Using the when keyword we choose which random
+    value should drive the dataOut signal
+   */
   io.dataOut := 0.U
   List.fill(numValues)(scala.util.Random.nextInt(100)).zipWithIndex.foreach {
     case(rand, idx) =>
@@ -114,9 +116,11 @@ class mySelector(numValues: Int) extends Module {
       }
   }
 
-  // While chisel comes with an inbuilt Counter, we implement ours the old fashion way
-  // There are far more elegant ways of implementing this, read the chisel docs, discuss
-  // best practice among yourselves and experiment!
+  /**
+    While chisel comes with an inbuilt Counter, we implement ours the old fashion way
+    There are far more elegant ways of implementing this, read the chisel docs, discuss
+    best practice among yourselves and experiment!
+    */
   nextOutputIsFresh := true.B
   when(io.next === true.B){
     when(counter < (numValues - 1).U){

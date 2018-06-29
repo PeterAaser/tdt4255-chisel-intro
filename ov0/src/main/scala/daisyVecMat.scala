@@ -5,39 +5,86 @@ import chisel3._
 import chisel3.core.Input
 import chisel3.iotesters.PeekPokeTester
 import chisel3.util.Counter
+import utilz._
 
 /**
   The daisy multiplier creates two daisy grids, one transposed, and multiplies them.
   */
-class daisyVecMat(val lengthA: Int, val rowsB: Int, val colsB: Int, val dataWidth: Int) extends Module {
+class daisyVecMat(matrixDims: Dims, dataWidth: Int) extends Module {
 
-  val io = IO(new Bundle {
+  val io = IO(
+    new Bundle {
 
-    val dataInA     = Input(UInt(dataWidth.W))
-    val readEnableA = Input(Bool())
+      val dataInA     = Input(UInt(dataWidth.W))
+      val writeEnableA = Input(Bool())
 
-    val dataInB     = Input(UInt(dataWidth.W))
-    val readEnableB = Input(Bool())
+      val dataInB     = Input(UInt(dataWidth.W))
+      val writeEnableB = Input(Bool())
 
-    val dataOut     = Output(UInt(dataWidth.W))
-    val dataValid   = Output(Bool())
-    val done        = Output(Bool())
-  })
+      val dataOut     = Output(UInt(dataWidth.W))
+      val dataValid   = Output(Bool())
+      val done        = Output(Bool())
 
-  // How many cycles does it take to fill the matrices with data?
+    }
+  )
 
+  /**
+    The dimensions are transposed because this is a vector * matrix multiplication
 
-  ////////////////////////////////////////
-  ////////////////////////////////////////
-  /// We transpose matrix B.
+                [1, 2]
+    [a, b, c] x [3, 4]
+                [5, 6]
+
+    Here the vector will output a, b, c, a, b, c, a...
+    The Matrix is the type you made last exercise, so it is actually just 3 more vectors
+    of length 2. In cycle 0 the values {1, 3, 5} may be selected, in cycle 1 {2, 4, 6}
+    can be selected.
+
+    However, you can make up for the impedance mismatch by transposing the matrix, storing
+    the data in 2 vectors of length 3 instead.
+
+    In memory matrixB will look like [1, 3, 5]
+                                     [2, 4, 6]
+
+    For a correct result, it is up to the user to input the data for matrixB in a transposed
+    manner. This is done in the tests, you don't need to worry about it.
+  */
+  val dims = matrixDims.transposed
+
+  // basic linAlg
+  val lengthA = dims.cols
+
   val vecA                 = Module(new daisyVector(lengthA, dataWidth)).io
-  val matrixB              = Module(new daisyGrid(colsB, rowsB, dataWidth)).io
+  val matrixB              = Module(new daisyGrid(dims, dataWidth)).io
   val dotProductCalculator = Module(new daisyDot(lengthA, dataWidth)).io
   val dataIsLoaded         = RegInit(Bool(), false.B)
 
   /**
     Your implementation here
     */
+  // Create counters to keep track of when the matrix and vector has gotten all the data.
+  // You can assume that writeEnable will be synchronized with the vectors. I.e for a vector
+  // of length 3 writeEnable can only go from true to false and vice versa at T = 0, 3, 6, 9 etc
+
+
+  // Create counters to keep track of how far along the computation is.
+
+  // Set up the correct rowSelect for matrixB
+
+  // Wire up write enables for matrixB and vecA
+
+  /**
+    In the solution I used the following to keep track of state
+    You can use these if you want to, or do it however you see fit.
+    */
+  // val currentCol = Counter(dims.cols)
+  // val rowSel = Counter(dims.rows)
+  // val aReady = RegInit(Bool(), false.B)
+  // val bReady = RegInit(Bool(), false.B)
+  // val isDone = RegInit(Bool(), false.B)
+  // val (inputCounterB, counterBWrapped) = Counter(io.writeEnableB, (dims.elements) - 1)
+  // val (numOutputted, numOutputtedWrapped) = Counter(dataValid, lengthA)
+  // val (inputCounterA, counterAWrapped) = Counter(io.writeEnableA, lengthA - 1)
 
   /**
     LF
@@ -49,10 +96,10 @@ class daisyVecMat(val lengthA: Int, val rowsB: Int, val colsB: Int, val dataWidt
   ////////////////////////////////////////
   /// Wire components
   vecA.dataIn := io.dataInA
-  vecA.readEnable := io.readEnableA
+  vecA.writeEnable := io.writeEnableA
 
   matrixB.dataIn := io.dataInB
-  matrixB.readEnable := io.readEnableB
+  matrixB.writeEnable := io.writeEnableB
 
   io.dataOut := dotProductCalculator.dataOut
 
@@ -66,9 +113,14 @@ class daisyVecMat(val lengthA: Int, val rowsB: Int, val colsB: Int, val dataWidt
   ////////////////////////////////////////
   ////////////////////////////////////////
   /// Select the correct row
-  val (currentCol, colDone) = Counter(true.B, colsB)
-  val (rowSel, _) = Counter(colDone, rowsB)
-  matrixB.rowSelect := rowSel
+  val currentCol = Counter(dims.cols)
+  val rowSel = Counter(dims.rows)
+
+  when(currentCol.inc()){
+    rowSel.inc()
+  }
+
+  matrixB.rowSelect := rowSel.value
 
 
   ////////////////////////////////////////
@@ -77,10 +129,10 @@ class daisyVecMat(val lengthA: Int, val rowsB: Int, val colsB: Int, val dataWidt
   val aReady = RegInit(Bool(), false.B)
   val bReady = RegInit(Bool(), false.B)
 
-  val (inputCounterA, counterAWrapped) = Counter(io.readEnableA, lengthA - 1)
+  val (inputCounterA, counterAWrapped) = Counter(io.writeEnableA, lengthA - 1)
   when(counterAWrapped){ aReady := true.B }
 
-  val (inputCounterB, counterBWrapped) = Counter(io.readEnableB, colsB*rowsB)
+  val (inputCounterB, counterBWrapped) = Counter(io.writeEnableB, (dims.elements) - 1)
   when(counterBWrapped){ bReady := true.B }
 
   dataIsLoaded := aReady & bReady
@@ -94,24 +146,5 @@ class daisyVecMat(val lengthA: Int, val rowsB: Int, val colsB: Int, val dataWidt
 
   when(numOutputtedWrapped){ isDone := true.B }
 
-
-  // printf(p"dataInA     = ${io.dataInA}\n")
-  // printf(p"validA      = ${io.readEnableA}\n")
-  // printf(p"dataInB     = ${io.dataInB}\n")
-  // printf(p"validB      = ${io.readEnableB}\n")
-  // printf(p"validOut    = ${io.dataValid}\n")
-  // printf(p"data loaded = ${dataIsLoaded}\n")
-  // printf(p"aReady      = ${aReady}\n")
-  // printf(p"bReady      = ${bReady}\n")
-
-  // printf(p"counter A      = ${inputCounterA}\n")
-  // printf(p"counter B      = ${inputCounterB}\n")
-
-  // printf(p"out         = ${dotProductCalculator.dataOut}\n\n")
-
-
-
-
   io.done := isDone
-
 }

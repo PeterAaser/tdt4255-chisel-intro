@@ -22,26 +22,6 @@
 ** TODO Øving 1
 ** TODO Øving 2
 
-* Øving 0
-
-** Praktisk 
-** Kombinatorisk
-*** Få absolutt enkleste krets (mux) til å fungere
-*** TODO Tegn RTL for krets med to multiplexere
-*** Sett sammen en krets som bruker to multiplexere
-    
-** Tilstand
-*** TODO Tegn RTL for en enkel teller
-*** Implementer en enkel teller
-*** TODO Implementer en enkel registerAvleser
-*** Tegn RTL av registeravleser
-*** Implementer daisyVec
-    
-** Sette sammen
-*** Lag tre daisyVecs som fylles og leses av i en test.
-*** Kombiner egenlagd mux med daisyVecs
-*** Kombiner til en parametriserbar matrise, med medfølgende tester.
-*** Instansier to matriser
-*** Multipliser dem
-    
-    
+* Tutorials
+  https://github.com/ucb-bar/generator-bootcamp
+  https://github.com/ucb-bar/chisel-tutorial/wiki/chisel-installation

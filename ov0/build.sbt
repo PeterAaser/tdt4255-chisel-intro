@@ -50,3 +50,4 @@ scalacOptions ++= scalacOptionsVersion(scalaVersion.value)
 scalacOptions ++= Seq("-language:reflectiveCalls")
 
 javacOptions ++= javacOptionsVersion(scalaVersion.value)
+

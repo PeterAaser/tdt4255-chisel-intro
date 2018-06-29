@@ -2,26 +2,30 @@ package Core
 import chisel3._
 import chisel3.core.Input
 import chisel3.iotesters.PeekPokeTester
+import utilz._
 
 /**
   The daisy multiplier creates two daisy grids, one transposed, and multiplies them.
   */
-class daisyMultiplier(val rowsA: Int, val colsA: Int, val rowsB: Int, val colsB: Int, val dataWidth: Int) extends Module {
+class daisyMultiplier(dims: Dims, dataWidth: Int) extends Module {
 
   val io = IO(new Bundle {
 
     val dataInA     = Input(UInt(dataWidth.W))
-    val readEnableA = Input(Bool())
+    val writeEnableA = Input(Bool())
 
     val dataInB     = Input(UInt(dataWidth.W))
-    val readEnableB = Input(Bool())
+    val writeEnableB = Input(Bool())
 
     val dataOut     = Output(UInt(dataWidth.W))
     val dataValid   = Output(Bool())
     val done        = Output(Bool())
   })
 
-  // How many cycles does it take to fill the matrices with data?
+
+  /**
+    Your implementation here
+    */
   val rowCounter       = RegInit(UInt(8.W), 0.U)
   val colCounter       = RegInit(UInt(8.W), 0.U)
 
@@ -33,20 +37,25 @@ class daisyMultiplier(val rowsA: Int, val colsA: Int, val rowsB: Int, val colsB:
   val resultReady      = RegInit(Bool(), false.B)
 
 
-  ////////////////////////////////////////
-  ////////////////////////////////////////
-  /// We transpose matrix B. This means that if both matrices read the same input
-  /// stream then they will end up transposed.
-  val matrixA = Module(new daisyGrid(rowsA, colsA, dataWidth)).io
-  val matrixB = Module(new daisyGrid(colsB, rowsB, dataWidth)).io
+  /**
+    Following the same principle behind the the vector matrix multiplication, by
+    NOT transposing the dimensions.
+
+    When writing a multiplier for a 3x2 matrix it's implicit that this means a
+    3x2 matrix and 2x3, returning a 2x2 matrix. By not transposing the dimensions
+    we get the same effect as in VecMat
+    */
+  val matrixA = Module(new daisyGrid(dims, dataWidth)).io
+  val matrixB = Module(new daisyGrid(dims, dataWidth)).io
+
+
+
 
   matrixA.dataIn := io.dataInA
-  matrixA.readEnable := io.readEnableA
+  matrixA.writeEnable := io.writeEnableA
 
   matrixB.dataIn := io.dataInB
-  matrixB.readEnable := io.readEnableB
-
-  printf("matrix A data in: %d\n", matrixB.dataIn)
+  matrixB.writeEnable := io.writeEnableB
 
 
   ////////////////////////////////////////
@@ -54,16 +63,16 @@ class daisyMultiplier(val rowsA: Int, val colsA: Int, val rowsB: Int, val colsB:
   /// Set up counter statemachine
   io.done := false.B
 
-  when(colCounter === (colsA - 1).U){
+  when(colCounter === (dims.cols - 1).U){
     colCounter := 0.U
 
-    when(rowCounter === (rowsA - 1).U){
+    when(rowCounter === (dims.rows - 1).U){
       rowCounter := 0.U
       calculating := true.B
 
       when(calculating === true.B){
 
-        when(rowOutputCounter === (rowsA - 1).U){
+        when(rowOutputCounter === (dims.rows - 1).U){
           io.done := true.B
         }.otherwise{
           rowOutputCounter := rowOutputCounter + 1.U
@@ -99,7 +108,7 @@ class daisyMultiplier(val rowsA: Int, val colsA: Int, val rowsB: Int, val colsB:
   resultReady := false.B
   io.dataValid := false.B
   when(calculating === true.B){
-    when(colCounter === (colsA - 1).U){
+    when(colCounter === (dims.cols - 1).U){
       resultReady := true.B
     }
   }
@@ -116,19 +125,4 @@ class daisyMultiplier(val rowsA: Int, val colsA: Int, val rowsB: Int, val colsB:
     accumulator := accumulator + (matrixA.dataOut*matrixB.dataOut)
   }
   io.dataOut := accumulator
-}
-
-
-class daisyMultiplierTest(c: daisyMultiplier) extends PeekPokeTester(c) {
-
-  poke(c.io.readEnableA, 1)
-  poke(c.io.readEnableB, 1)
-  for(ii <- 0 until 6){
-    println("data in:")
-    poke(c.io.dataInA, (ii/2) + 1)
-    poke(c.io.dataInB, (ii/2) + 1)
-    println("fill counters")
-    step(1)
-    println("////////////////////\n")
-  }
 }

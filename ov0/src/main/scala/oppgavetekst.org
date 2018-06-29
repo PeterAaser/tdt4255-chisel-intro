@@ -3,6 +3,9 @@
   FPGAs using chisel. 
   In this exercise you will implement a circuit capable of performing matrix 
   matrix multiplication in the chisel hardware description language.
+  
+  HAND IN YOUR CODE IN AN ARCHIVE WITH YOUR USERNAME (e.g peteraa_ex0).
+  PLEASE ENSURE THAT WHEN UNZIPPING THE TESTS CAN BE RUN.
 
 * Your first component
   There are two types of digital components: Combinatorial and stateful.
@@ -176,18 +179,25 @@
                         
    From the figure the principle of operation becomes clearer [inkskape drawing, rm sketch]
    
-   To test your implementation you can run testOnly Core.daisyVecSpec in sbt
-   
+   To test your implementation you can run 
+   sbt> testOnly Core.daisyVecSpec 
+   in your sbt console
    
 ** Task 2 - Dot Product
-   Your next task is to implement daisyDot.
-   daisyDot should calculate the dot product of two vectors, inA and inB. Ensure that validOut
-   is only asserted when you have a result. Ensure that your accumulator gets flushed after 
-   calculating your dot product.
+   Your next task is to implement a dot product calculator. daisyDot should
+   calculate the dot product of two vectors, inA and inB. Ensure that validOut
+   is only asserted when you have a result. Ensure that your accumulator gets
+   flushed after calculating your dot product.
+   
+   Implement the dot product calculator in daisyDot.scala
+   
+   To test your implementation you can run 
+   sbt> testOnly Core.daisyDotSpec
+   in your sbt console
 
 ** Task 3 - Vector Matrix multiplication
-   Having implemented a dot product calculator, a vector matrix multiplier is not that different.
-   In imperative code we get something like this:
+   Having implemented a dot product calculator, a vector matrix multiplier is
+   not that different. In imperative code we get something like this:
    
    #+begin_src scala
    type Matrix[A] = List[List[A]]
@@ -202,22 +212,51 @@
    }
    #+end_src scala
    
-   This is just repeated application of dotProduct.
-   Since vector matrix multiplication is the dotproduct of the vector and the rows of the matrix,
+   This is just repeated application of dotProduct. Since vector matrix
+   multiplication is the dotproduct of the vector and the rows of the matrix,
    the matrix must be transposed.
+   The skeleton code contains more hints if this did not make any sense.
    
 *** Subtask 1 - representing a matrix
-    Like the dot product calculator, the first step is to implement a register bank for storing a matrix.
-    This can be done by creating n vectors from Task 1 and then select which row is the 'current' row.
+    Like the dot product calculator, the first step is to implement a register
+    bank for storing a matrix. This can be done by creating n vectors from Task
+    1 and then select which row is the 'current' row.
     
-    The matrix representation you have created in this task allows you to select which row to read, but 
-    not which column. This isn't very efficient when you want to read an entire column since you would have
-    to wait a full cycle for each row.
-    The way we deal with this is noticing that when multiplying two matrices we work on a row basis in 
-    matrix A, and column basis on matrix B. If we simply transpose matrix B, then accessing its rows is 
-    the same as accessing the columns of matrix B.
+    Implement this in daisyGrid.scala
     
-    A consequence of this is that the API exposed by your matrix multiplier requires matrix B to be transposed.
+    The matrix representation you have created in this task allows you to select
+    which row to read, but not which column. This isn't very efficient when you
+    want to read an entire column since you would have to wait a full cycle for
+    each row. The way we deal with this is noticing that when multiplying two
+    matrices we work on a row basis in matrix A, and column basis on matrix B.
+    If we simply transpose matrix B, then accessing its rows is the same as
+    accessing the columns of matrix B.
+    
+    A consequence of this is that the API exposed by your matrix multiplier
+    requires matrix B to be transposed.
 
 *** Subtask 2 - vector matrix multiplication
+    You now have the necessary pieces to create a vector matrix multiplier.
+    Your implementation should have a vector and a matrix (grid).
+    Input for the vector is in order, input for the matrix is transposed.
     
+    Implement this in daisyVecMat.scala
+
+** Task 4 - Matrix Matrix multiplication
+   You can now implement a matrix matrix multiplier.
+   You can (and should) reuse the code for this module from the vector matrix
+   multiplier.
+
+   Implement this in daisyMatMul.scala
+   
+   When all tests are green you are good to go.
+
+** Bonus exercise - Introspection on code quality and design choices
+   This "exercise" has no deliverable, but you should spend some time thinking about
+   what parts gave you most trouble and what you can do to change your approach.
+   
+   In addition, the implementation you were railroaded into has a flaw that lead to 
+   unescessary code duplication when going from a vector matrix multiplier to a matrix 
+   matrix multiplier.
+   
+   Why did this happen, and how could this have been avoided?
