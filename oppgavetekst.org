@@ -188,6 +188,15 @@
 #+CAPTION: A vector with 4 registers
 [[./tdt4255figs/pngs/vector.png]]
    
+   This shows a vector with 4 registers. Row 1 shows cycles 0 to 3, row 2 shows 4 - 7 etc.
+   After writing the write enable signal is turned off, thus the values held in the registers are
+   not overwritten.
+   
+   In RTL the black box surrounding the vector shows only the inputs and outputs. The figure shows
+   the corresponding black box to the last column in the previous figure
+   
+   [[./tdt4255figs/pngs/vectorBB.png]]
+   
 ** Task 2 - Dot Product
    Your next task is to implement a dot product calculator. daisyDot should
    calculate the dot product of two vectors, inA and inB. Ensure that validOut
