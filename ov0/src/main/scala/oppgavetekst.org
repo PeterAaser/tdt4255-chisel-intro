@@ -170,13 +170,15 @@
 ** Task 1 - Vector
    The first component you should implement is a register bank for storing a vector.
    This module works as follows:
-   
+     #+begin_src scala
+    // pseudocode
+
    let dataOut(T) = if (T - vectorLength) < 0 then 0 else
                       if enableIn(T - vectorLength) 
                         then dataIn(T - vectorLength)
                       else
                         dataOut(T - vectorLength)
-                        
+         #+end_src      
    From the figure the principle of operation becomes clearer [inkskape drawing, rm sketch]
    
    To test your implementation you can run 
