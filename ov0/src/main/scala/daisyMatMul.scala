@@ -57,7 +57,6 @@ class daisyMultiplier(dims: Dims, dataWidth: Int) extends Module {
   matrixB.dataIn := io.dataInB
   matrixB.writeEnable := io.writeEnableB
 
-
   ////////////////////////////////////////
   ////////////////////////////////////////
   /// Set up counter statemachine

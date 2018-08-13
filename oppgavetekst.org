@@ -179,11 +179,14 @@
                       else
                         dataOut(T - vectorLength)
          #+end_src      
-   From the figure the principle of operation becomes clearer [inkskape drawing, rm sketch]
+   From the figure the principle of operation becomes clearer
    
    To test your implementation you can run 
    sbt> testOnly Core.daisyVecSpec 
    in your sbt console
+   
+#+CAPTION: A vector with 4 registers
+[[./tdt4255figs/pngs/vector.png]]
    
 ** Task 2 - Dot Product
    Your next task is to implement a dot product calculator. daisyDot should
