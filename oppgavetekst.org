@@ -416,7 +416,7 @@
   }
   #+end_src
   
-  Hooray, now we get `scala.NotImplementedError: an implementation is missing`
+  Hooray, now we get ~scala.NotImplementedError: an implementation is missing~
   as expected, along with an enormous stacktrace..
 
   The observant reader may have observed that it is perfectly legal to put chisel types in scala
@@ -426,7 +426,7 @@
   If it happens to contain values of chisel types then these will exist in the design, however the
   collection will not, so we cannot index based on the collection.
   
-  This can be seen in `myIncrementN` where an array of incrementors is used.
+  This can be seen in ~myIncrementN~ where an array of incrementors is used.
   The array is only used help the scala program wire the components together, and once this is
   done the array is not used.
   We could do the same with MyVector, but it's not pretty:
@@ -498,9 +498,7 @@
   However, unlike the previous circuits, the simpleDelay circuit stores its value 
   in a register, causing a one cycle delay between input and output.
   
-  Lets test this
-
-  
+  Lets try it!
   #+begin_src scala
   class DelaySpec extends FlatSpec with Matchers {
     behavior of "SimpleDelay"
@@ -522,7 +520,7 @@
   }
   #+end_src
   
-  Lets test it
+  We then run the test:
 
   #+begin_src
   sbt:chisel-module-template> testOnly Ex0.DelaySpec
@@ -548,7 +546,6 @@
   Oops, the tester doesn't advance the clock befor testing output, totally didn't
   make an error on purpose to highlight that...
   
-
   #+begin_src scala
   class DelayTester(c: SimpleDelay) extends PeekPokeTester(c)  {
     for(ii <- 0 until 10){
@@ -577,22 +574,11 @@
     ???
   }
   #+end_src
+  
+  Before you continue you should have a good grasp on the difference between scala and
+  chisel. For instance, what is the difference between ~=~ and ~:=~?
+  If ~a~ is the input for a module, and ~b~ is the output, should it be ~a := b~ or ~b := a~?
 
-  This should answer the initial question of combinatorial vs stateful: 
-  The output of a combinatorial circuit will be available instantly, while 
-  a stateful circuit will only update its output during rising edges on the 
-  clock.
-  
-  Before you continue it is recommended that you check out the chisel3
-  tutorials.
-  
-  In the basics.scala there is one more module, a basic selector.
-  At compile time this component builds n random numbers, to see which we can
-  cycle through them.
-  The component comes with a test, this test will be run when you do sbt.run
-  You should study this component. What is the difference between if/else and 
-  when/otherwise?
-  
 * Matrix matrix multiplication
   When designing digital logic you should always start with decomposition.
   Your first task is therefore to implement a dot product calculator, since 
