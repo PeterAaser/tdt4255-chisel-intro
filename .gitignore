@@ -342,3 +342,14 @@ hs_err_pid*
 
 *.fir
 *.json
+
+# ENSIME, metals and friends
+.ensime*
+.metals*
+.bloop*
+.projectile
+target/
+scratchpad.scala
+log/
+TODO.org
+index.html

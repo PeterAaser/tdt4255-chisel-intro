@@ -1,26 +1,6 @@
-* Thoughts
-  For RISC-V bruk SODOR, finn på chisel sia
-  
-* Doing
-  Finn ut hvordan bundles, defs etc burde fungere.
-  
-* Now
-** DONE Port Babby to chisel3
-*** DONE compile and run
-*** DONE fix deprecation
-    
-** TODO Software test suite POC
-   
-* Later
-** TODO Set up folder structure
-** TODO Figure out how to run tests
-   
-* Milestones
-** TODO Øving 0
-** TODO Hardware test suite POC
-** TODO Finalize Øving 0
-** TODO Øving 1
-** TODO Øving 2
+
+* Points
+** 
 
 * Tutorials
   https://github.com/ucb-bar/generator-bootcamp
