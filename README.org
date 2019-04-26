@@ -1,0 +1,6 @@
+This is the chisel intro for the TDT4255 course at NTNU.
+If you use it for your cours, please let me know how it went and feel 
+free (or even slightly pressured) to submit pull requests with improvements.
+
+TODO: Installation instructions, link to scala primer and link to other tutorials.
+Also lacking images, they're on the way.
