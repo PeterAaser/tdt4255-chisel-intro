@@ -7,24 +7,20 @@
 * Chisel
 ** Prerequisites
    + *You should have some idea of how digital logic circuits work.*
-
      Do you know what a NAND gate is? 
      Do you know how many wires you need to address 64kb of memory? 
      If so you should be able to pick it up :)
 
    + *You must be able to run scala programs.*
-
      If you can run java then you can run scala.
      If not grab the jvm. Remember to curse Larry Page if you pick it up from the
      oracle webpage.
 
    + *Some flavor of GNU/Linux, or at least something UNIX-like.*
-
      If you use anything other than Ubuntu 16.04 or 18.04 I won't be able to offer
      help if something goes wrong.
 
    + *An editor suited for scala.*
-
      My personal recommendation is GNU Emacs with emacs-lsp for IDE features along
      with the metals language server (which works for any editor with lsp (language 
      server protocol), such as vim, vscode and atom).
@@ -32,7 +28,6 @@
      it personally, so if odd stuff happens I can't help you.
 
    + *Optional: sbt*
-
      You can install the scala build tool on your system, but for convenience I've
      included a bootstrap script in sbt.sh.
      sbt will select the correct version for you, so you don't have to worry about
