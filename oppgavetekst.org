@@ -743,12 +743,17 @@
    Now all we need to do is calculate the dot products for the final matrix:
 
    #+begin_src
-   A*B = C then
+   if A*B = C then
 
         |  A[0] × BT[0],   A[0] × BT[1],   A[0] × BT[2] |
    C  = |  A[1] × BT[0],   ...         ,   ...          |
         |  ...         ,   ...         ,   A[2] × BT[2] |
 
+   where 
+   A[0] × BT[0] is the dot product of [2, 5] and [1, 0]
+   and
+   A[0] × BT[1] is the dot product of [2, 5] and [1, 4]
+   and so forth..
    #+end_src
    
    Because of this, the input for matrix B will be supplied transposed, thus you do not

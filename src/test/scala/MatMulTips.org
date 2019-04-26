@@ -17,10 +17,13 @@ This is a fairly typical task, so chisel.util has you covered with the Counter c
 https://chisel.eecs.berkeley.edu/api/3.0.1/chisel3/util/Counter.html
 https://chisel.eecs.berkeley.edu/api/3.0.1/chisel3/util/Counter$.html
 
-(The second link links to the Counter object rather than the class. Typically we put
-constructors and static methods in the companion object of a class)
+The second link links to the Counter object rather than the class. Typically we put
+constructors and static methods in the companion object of a class.
+Object methods named apply can be called directly from the object, which means
+~MyObject.apply(123)~ is the same as ~MyObject(123)~
+Very convenient once you're used to it, but a little odd first time you see it.
 
-In the Counter object there is a method called apply:
+In the Counter object there is an apply method:
 #+begin_src scala
   def apply(cond: Bool, n: Int): (UInt, Bool)
 #+end_src
@@ -51,3 +54,5 @@ To test them, write your own test for MatMul that simply runs your MatMul unit a
 timestep until you're confident that they're correct.
 As described in the debugging section, you should make a separate debug IO port with debug signals enabling you
 to read out these values. Attempting to read them directly will throw an error.
+
+The best tip of course is to actually show up during lab hours.

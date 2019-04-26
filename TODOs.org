@@ -1,6 +1,8 @@
 
 * Points
-** 
+  Test strategy
+
+  Fuck å gjøre det ordentlig, det blir bare kaos
 
 * Tutorials
   https://github.com/ucb-bar/generator-bootcamp
