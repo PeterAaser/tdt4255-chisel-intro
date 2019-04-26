@@ -4,3 +4,6 @@ free (or even slightly pressured) to submit pull requests with improvements.
 
 TODO: Installation instructions, link to scala primer and link to other tutorials.
 Also lacking images, they're on the way.
+
+The main course(work) for creating a 5-stage RISCV pipeline can be found here
+https://github.com/PeterAaser/TDT4255_EX2
