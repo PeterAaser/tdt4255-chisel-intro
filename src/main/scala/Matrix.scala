@@ -32,22 +32,4 @@ class Matrix(val rowsDim: Int, val colsDim: Int) extends Module {
     rows(ii).readEnable := false.B
     rows(ii).idx        := 0.U
   }
-
-
-  /**
-    * LF
-    */
-  for(ii <- 0 until rowsDim){
-
-    rows(ii).dataIn := io.dataIn
-    rows(ii).idx    := io.colIdx
-
-    when(ii.U === io.rowIdx){
-      rows(ii).readEnable := io.readEnable
-    }.otherwise{
-      rows(ii).readEnable := false.B
-    }
-  }
-  io.dataOut := rows(io.rowIdx).dataOut
-
 }

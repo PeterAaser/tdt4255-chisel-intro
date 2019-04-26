@@ -23,17 +23,7 @@ class DotProd(val elements: Int) extends Module {
   val accumulator = RegInit(UInt(32.W), 0.U)
   val product = io.dataInA * io.dataInB
 
-
-  /**
-    * LF
-    */
-  when(counter.inc()){
-    io.outputValid := true.B
-    accumulator    := 0.U
-  }.otherwise{
-    io.outputValid := false.B
-    accumulator    := accumulator + product
-  }
-
-  io.dataOut := accumulator + product
+  // placeholder
+  io.dataOut := 0.U
+  io.outputValid := false.B
 }

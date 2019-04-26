@@ -24,13 +24,4 @@ class Vector(val elements: Int) extends Module {
 
   // placeholder
   io.dataOut := 0.U
-
-
-  /**
-    * LF
-    */
-  io.dataOut := contents(io.idx)
-  when(io.readEnable){
-    contents(io.idx) := io.dataIn
-  }
 }
