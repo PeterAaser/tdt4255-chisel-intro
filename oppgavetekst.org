@@ -108,7 +108,6 @@
    }
    #+end_src
    
-
 ** Scala and chisel
    The code for these snippets can be found in Example.scala in the test directory.
    You can run them using sbt by running ./sbt in your project root which will open
@@ -579,7 +578,84 @@
    Before you continue you should have a good grasp on the difference between scala and
    chisel. For instance, what is the difference between ~=~ and ~:=~?
    If ~a~ is the input for a module, and ~b~ is the output, should it be ~a := b~ or ~b := a~?
+   What's the difference between 
+   ~if( ... ) ... else ...~
+   and
+   ~when( ... ){ ... }.elsewhen( ... ){ ... }.otherwise{ ... }~
+   ?
 
+** Debugging
+   A rather nasty pain point in chisel is the debuggability.
+   In order to inspect our circuits we have two main tools, the peekPokeTester and trusty
+   old printf, however both have huge flaws.
+
+*** Printf
+    Printf statements will be executed once per clock cycle if the surrounding block is executed.
+    This means we can put a printf statement in a module and have it print some state every 
+    cycle, and we can put it inside a when block in order to conditionally print.
+    
+    Other than quickly creating a tremendous amount of noise, printf has a tendency to fool you
+    since it often reports values that are one clock cycle off.
+
+    To see this in action, try running EvilPrintfSpec
+
+*** PeekPoke
+    The good thing about PeekPokeTester is that it won't lie to you, but it's not a very
+    flexible tester either.
+    
+    The most annoying flaw is that it cannot inspect the value of a submodule. 
+    
+    Consider the following module
+    #+begin_src scala
+    class Outer() extends Module {
+      val io = IO(
+        new Bundle {
+          val dataIn  = Input(UInt(32.W))
+          val dataOut = Output(UInt(32.W))
+        }
+      )
+      
+      val inner = Module(new Inner).io
+      
+      inner.dataIn := io.dataIn
+      io.dataOut   := inner.dataOut
+    }
+    #+end_src
+    
+    It would be nice if we could use the peekPokeTester to inspect what goes on inside
+    Inner, however this information gets removed before the peekPokeTester is run.
+    
+    The way I deal with this is using a multiIOModule.
+    In this example I have done the same for inner, using a special debug IO bundle to
+    separate the modules interface and whatever debug signals I'm interested in.
+    
+    MultiIOModule can do everything Module can, so if you want to you can use it everywhere.
+
+    #+begin_src scala
+    import chisel3.experimental.MultiIOModule
+
+    class Outer() extends MultiIOModule {
+      val io = IO(
+        new Bundle {
+          val dataIn  = Input(UInt(32.W))
+          val dataOut = Output(UInt(32.W))
+        }
+      )
+      
+      val debug = IO(
+        new Bundle {
+          val innerState = Output(UInt(32.W))
+        }
+      )
+      
+      val inner = Module(new Inner)
+      
+      inner.io.dataIn := io.dataIn
+      io.dataOut   := inner.io.dataOut
+      
+      debug.innerState := inner.debug.frobnicatorState
+    }
+    #+end_src
 
 * Matrix matrix multiplication
   For your first foray into chisel you will design a matrix matrix multiplication unit.
@@ -641,6 +717,7 @@
    When performing matrix multiplication on a computer transposing the second matrix
    can help us reduce complexity by quite a lot. To examplify, consider 
       
+   #+begin_src
        | 2,  5 |
    A = | 7, -1 |
        | 0,  4 |
@@ -648,14 +725,43 @@
 
    B = | 1,  1,  2 |
        | 0,  4,  0 |
+   #+end_src
+   
+   It would be much simpler to just have two modules with the same dimensions, and we
+   can do this by transposing B so we get
        
+   #+begin_src
+        | 2,  5 |
+   A  = | 7, -1 |
+        | 0,  4 |
+       
+        | 1,  0 |
+   BT = | 1,  4 |
+        | 2,  0 |
+   #+end_src
+   
+   Now all we need to do is calculate the dot products for the final matrix:
+
+   #+begin_src
+   A*B = C then
+
+        |  A[0] × BT[0],   A[0] × BT[1],   A[0] × BT[2] |
+   C  = |  A[1] × BT[0],   ...         ,   ...          |
+        |  ...         ,   ...         ,   A[2] × BT[2] |
+
+   #+end_src
+   
+   Because of this, the input for matrix B will be supplied transposed, thus you do not
+   have to worry about this. For B the input would be [1, 0, 1, 4, 2, 0]
+   
+   The skeleton code for the matrix multiplier is less detailed, with only one test.
+   You're encouraged to write your own tests to make this easier.
+   Additionally, if you feel like you're getting stuck you can take a look at 
+   MatMulTips.org
        
 ** Bonus exercise - Introspection on code quality and design choices
-   This "exercise" has no deliverable, but you should spend some time thinking about
-   what parts gave you most trouble and what you can do to change your approach.
-   
-   In addition, the implementation you were railroaded into has a flaw that lead to 
-   unescessary code duplication when going from a vector matrix multiplier to a matrix 
-   matrix multiplier.
-   
-   Why did this happen, and how could this have been avoided?
+   This last exercise has no deliverable, but you should spend some time thinking about
+   where you spent most of your efforts.
+
+   A common saying is "A few hours of work can save you from several minutes of planning", 
+   and this holds especially true for writing chisel!!

@@ -210,3 +210,47 @@ class DPCsimulatorSpec extends FlatSpec with Matchers {
   }
 }
 
+
+class EvilPrintfSpec extends FlatSpec with Matchers {
+
+  class CountTo3() extends Module {
+    val io = IO(
+      new Bundle {
+        val dataOut     = Output(UInt(32.W))
+        val validOutput = Output(Bool())
+      }
+    )
+    val count = RegInit(UInt(32.W), 0.U)
+    io.dataOut := count
+
+    printf(p"according to printf output is: ${io.dataOut}\n")
+
+    when(count != 3.U){
+      count := count + 1.U
+      io.validOutput := false.B
+      io.dataOut := 0.U
+    }.otherwise{
+      io.validOutput := true.B
+      io.dataOut := 1.U
+    }
+
+  }
+
+
+  class CountTo3Test(c: CountTo3) extends PeekPokeTester(c)  {
+    for(ii <- 0 until 5){
+      println(s"\nIn cycle $ii the output of counter is: ${peek(c.io.dataOut)}")
+      step(1)
+    }
+  }
+
+  behavior of "EvilPrintf"
+
+  it should "tell a lie and hurt you" in {
+    wrapTester(
+      chisel3.iotesters.Driver(() => new CountTo3) { c =>
+        new CountTo3Test(c)
+      } should be(true)
+    )
+  }
+}
