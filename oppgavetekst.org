@@ -6,24 +6,33 @@
   
 * Chisel
 ** Prerequisites
-   + You should have some idea of how digital logic circuits work.
+   + *You should have some idea of how digital logic circuits work.*
+
      Do you know what a NAND gate is? 
      Do you know how many wires you need to address 64kb of memory? 
      If so you should be able to pick it up :)
-   + You must be able to run scala programs. 
+
+   + *You must be able to run scala programs.*
+
      If you can run java then you can run scala.
      If not grab the jvm. Remember to curse Larry Page if you pick it up from the
      oracle webpage.
-   + Some flavor of GNU/Linux, or at least something UNIX-like.
+
+   + *Some flavor of GNU/Linux, or at least something UNIX-like.*
+
      If you use anything other than Ubuntu 16.04 or 18.04 I won't be able to offer
      help if something goes wrong.
-   + An editor suited for scala.
+
+   + *An editor suited for scala.*
+
      My personal recommendation is GNU Emacs with emacs-lsp for IDE features along
      with the metals language server (which works for any editor with lsp (language 
      server protocol), such as vim, vscode and atom).
      If you prefer an IDE I hear good things about intelliJ, however I haven't tested
      it personally, so if odd stuff happens I can't help you.
-   + Optional: sbt
+
+   + *Optional: sbt*
+
      You can install the scala build tool on your system, but for convenience I've
      included a bootstrap script in sbt.sh.
      sbt will select the correct version for you, so you don't have to worry about
@@ -33,7 +42,8 @@
 ** Terms
    Before delving into code it's necessary to define some terms.
    
-   + Wire
+   + *Wire*
+
      A wire is a bundle of 1 to N condictive wires (yes, that is a recursive 
      definition, but I think you get what I mean). These wires are connected
      either to ground or a voltage source, corresponding to 0 or 1, which
@@ -44,7 +54,8 @@
      val myWire = Wire(UInt(4.W))
      #+end_src
  
-   + Driving
+   + *Driving*
+
      A wire in on itself is rather pointless since it doesn't do anything.
      In order for something to happen we need to connect them.
      #+begin_src scala
@@ -67,20 +78,24 @@
      wireB := wireA
      #+end_src
      
-   + Module
+   + *Module*
+
      In order to make development easier we separate functionality into modules, 
      defined by its inputs and outputs.
  
-   + Combinatory circuit
+   + *Combinatory circuit*
+
      A combinatory circuit is a circuit whose output is based only on its
      inputs.
      
-   + Stateful circuit
+   + *Stateful circuit*
+
      A circuit that will give different results based on its internal state.
      In common parlance, a circuit without registers (or memory) is combinatory
      while a circuit with registers is stateful.
  
-   + Chisel Graph
+   + *Chisel Graph*
+
      A chisel program is a program whose result is a graph which can be synthesized
      to a transistor level schematic of a logic circuit.
      When connecting wires wireA and wireB we were actually manipulating a graph
