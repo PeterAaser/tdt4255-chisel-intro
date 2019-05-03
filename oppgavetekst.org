@@ -67,8 +67,7 @@
      Here wireA is driven by the signal 2.U, and wireB is driven by wireA.
      
      For well behaved circuits it does not make sense to let a wire be driven 
-     by multiple sources which would make the resulting signal undefined
-     (maybe it makes sense for a javascript processor, I hear they love undefined)
+     by multiple sources which would make the resulting signal undefined.
      
      Similarily a circular dependency is not allowed a la
      #+begin_src scala
@@ -77,6 +76,10 @@
      wireA := wireB
      wireB := wireA
      #+end_src
+     
+     Physically it *is* possible to have multiple drivers, but it's not a good idea
+     as attempting to drive a wire with 0 and 1 simultaneously causes a short circuit
+     which is definitely not a good thing.
      
    + *Module*
 
@@ -104,14 +107,16 @@
      combinatorial.
 
 ** Your first component
+   The code for the snippets in this subchapter can be found in Example.scala in the test directory.
+   You can run them using sbt by running ./sbt in your project root which will open
+   your sbt console.
+
+   This will start a large download, so be patient even if it looks like it's stuck.
+
    The first component we will consider is a simple combinatorial incrementor:
-   
    #+begin_src scala
-   // These will be omitted in further examples
-   package Ex0
-   import chisel3._
- 
-   class myIncrement(incrementBy: Int) extends Module {
+   // Using `val` in a class argument list makes that value public.
+   class MyIncrement(val incrementBy: Int) extends Module {
      val io = IO(
        new Bundle {
          val dataIn  = Input(UInt(32.W))
@@ -123,11 +128,141 @@
    }
    #+end_src
    
+   with incrementBy = 3 we get the following circuit:
    TODO: Fig
    
-   Let's see how we can use our module:
+
+** Testing your chisel component
+   After creating a module you might wonder how it can be run.
+   It is not a program, it's a description of a digital circuit, so in order to "run" a chisel model
+   we have to simulate it.
+   
+   This is done by creating a test program where the test runner drives inputs and reads outputs from 
+   the module using what is called a peek poke tester.
+   
+
+*** Creating a peek poke tester
+    #+begin_src scala
+    class TheTestRunner(c: MyIncrement) extends PeekPokeTester(c)  {
+      for(ii <- 0 until 5){
+        poke(c.io.dataIn, ii)
+        val o = peek(c.io.dataOut)
+        println(s"At cycle $ii the output of myIncrement was $o")
+        expect(c.io.dataOut, ii+c.incrementBy)
+      }
+    }
+    #+end_src
+    
+    There are three features of the peek poke tester on display here:
+
+    1. a peek poke tester has the ability to peek at a value, returning its state. 
+       This however is restricted to the modules *io only*
+
+    2. it has the ability to poke (set) the value of an input signal.
+       Again, this can be done to *input io only*
+    
+    3. It can expect a signal to have a certain value and throw an exception if not met.
+       Expect is defined in terms of peek.
+    
+    A peek poke tester can also /step/ the circuit, this will be covered when stateful circuits
+    have been introduced.
+   
+*** Running a peek poke tester
+    The test runner class we have defined requires a MyIncrement module that can be simulated.
+    However, by writing ~~val inc3 = Module(new MyIncrement(3))~~ the return value is a *chisel graph*,
+    i.e a schematic for a circuit.
+    In order to interact with a circuit the schematic must be interpreted, resulting in a simulated
+    circuit which the peek poke tester can interact with.
+    
+    If this isn't clear don't worry, in terms of code all we need to do is to invoke a chisel method for
+    building the circuit:
+    
+    #+begin_src scala
+    chisel3.iotesters.Driver(() => new MyIncrement(3)) { c =>
+      new TheTestRunner(c)
+    }
+    #+end_src
+
+    Unfortunately this code might be a little hard to parse if you're new to scala. 
+    Understanding it is not necessary, it is sufficient to simply swap 
+    ~~MyIncrement(3)~~ in ~~(() => MyIncrement(3))~~ with the module you want to test, and
+    ~~TheTestRunner(c)~~ with the test runner you want to run.
+
+    #+begin_src scala
+    chisel3.iotesters.Driver(() => new MyIncrement(3)) { c =>
+      new TheTestRunner(c)
+    }
+    #+end_src
+
+*** Putting it together into a runnable test
+    We want to be able to run our test from sbt. To do this we use the scalatest framework.
+    A test looks like this:
+
+    #+begin_src scala
+    class MyTest extends FlatSpec with Matchers {
+      behavior of "the test that I have written"
+
+      it should "sum two numbers" in {
+        2 + 2
+      } should be 4
+    }
+    #+end_src
+    
+    The tester class introduces a lot of special syntax, but like above it is not necessary 
+    to understand how, simply using the template above is sufficient.
+
+    Applying the tester template we end up with:
+
+    #+begin_src scala
+    class MyIncrementTest extends FlatSpec with Matchers {
+      behavior of "my increment"
+    
+      it should "increment its input by 3" in {
+        chisel3.iotesters.Driver(() => new MyIncrement(3)) { c =>
+          new TheTestRunner(c)
+        } should be(true)
+      }
+    }
+    #+end_src
+    
+    By creating this test it is now possible to run it from sbt.
+    There are two ways to test. By simply writing "test" in the sbt console as so:
+    ~~sbt:chisel-module-template> test~~ every single test will be run.
+    Since this creates a lot of noise it's more useful to run "testOnly":
+    ~~sbt:chisel-module-template> testOnly Examples.MyIncrementTest~~ where "Examples" 
+    is the name of the package and MyIncrementTest is the name of the test.
+    The tests for the exercise itself is located in Ex0, so for instance
+    ~~sbt:chisel-module-template> testOnly Ex0.MatrixSpec~~ will run the matrix test.
+    
+    Note: by running "test" once you can use tab completion in the sbt shell to find tests with testOnly.
+    using testOnly <TAB>
+    
+    Running the test should look something like this.
+    #+begin_src
+    sbt:chisel-module-template> testOnly Examples.MyIncrementTest
+    Run starting. Expected test count is: 0
+    ...
+    Circuit state created
+    [info] [0.001] SEED 1556890076413
+    [info] [0.002] At cycle 0 the output of myIncrement was 3
+    [info] [0.003] At cycle 1 the output of myIncrement was 4
+    [info] [0.003] At cycle 2 the output of myIncrement was 5
+    [info] [0.003] At cycle 3 the output of myIncrement was 6
+    [info] [0.003] At cycle 4 the output of myIncrement was 7
+    test MyIncrementTestMyIncrement Success: 5 tests passed in 5 cycles taking 0.011709 seconds
+    [info] [0.004] RAN 0 CYCLES PASSED
+    - should increment its input by 3
+    Run completed in 771 milliseconds.
+    ...
+    #+end_src
+
+    In the Example.scala file you can find the entire test.
+    The only difference is that everything is put in the same class.
+
+** Using modules
+   Let's see how we can use our module by instantiating it as a submodule:
    #+begin_src scala
-   class myIncrementTwice(incrementBy: Int) extends Module {
+   class MyIncrementTwice(incrementBy: Int) extends Module {
      val io = IO(
        new Bundle {
          val dataIn  = Input(UInt(32.W))
@@ -135,8 +270,8 @@
        }
      )
    
-     val first  = Module(new myIncrement(incrementBy))
-     val second = Module(new myIncrement(incrementBy))
+     val first  = Module(new MyIncrement(incrementBy))
+     val second = Module(new MyIncrement(incrementBy))
    
      first.io.dataIn  := io.dataIn
      second.io.dataIn := first.io.dataOut
@@ -145,20 +280,16 @@
    }
    #+end_src
    
-   What about running it?
-
-   In chisel the only reason to run a program is to produce a schematic that can be uploaded to an
-   FPGA (or plugged into an ASIC manufacturing toolchain)
+   The RTL diagram now looks like this:
    
-   Instead of synthesizing our design and running it on FPGAs we will instead rely on software emulator
-   testing, thus all your code will be run via the supplied test harness.
+   Note how the modules ~~first~~ and ~~second~~ are now drawn as black boxes. 
+   When drawing RTL diagrams we're not interested in the internals of submodules.
+
+   However, what if we want to instantiate an arbitrary amount of incrementors and chain them?
+   To see how this can be done it is necessary to take a detour:
+
 
 ** Scala and chisel
-   The code for the snippets in this subchapter can be found in Example.scala in the test directory.
-   You can run them using sbt by running ./sbt in your project root which will open
-   your sbt console.
-   This will start a large download, so be patient even if it looks like it's stuck.
- 
    A major stumbling block for learning chisel is understanding the difference between scala and chisel.
    To highlight the difference between the two consider how HTML is generated.
  
@@ -195,7 +326,7 @@
    Similarily we can use constructs such as for loops to manipulate the chisel graph:
    
    #+begin_src scala
-   class myIncrementN(incrementBy: Int, numIncrementors: Int) extends Module {
+   class MyIncrementN(val incrementBy: Int, val numIncrementors: Int) extends Module {
      val io = IO(
        new Bundle {
          val dataIn  = Input(UInt(32.W))
@@ -203,19 +334,18 @@
        }
      )
    
-     val incrementors = Array.fill(numIncrementors){ Module(new myIncrement(incrementBy)) }
+     val incrementors = Array.fill(numIncrementors){ Module(new MyIncrement(incrementBy)) }
    
      for(ii <- 1 until numIncrementors){
        incrementors(ii).io.dataIn := incrementors(ii - 1).io.dataOut
      }
    
      incrementors(0).io.dataIn := io.dataIn
-     io.dataOut := incrementors(numIncrementors).io.dataOut
+     io.dataOut := incrementors.last.io.dataOut
    }
    #+end_src
    Keep in mind that the for-loop only exists at design time, just like a for loop
    generating a table in HTML will not be part of the finished HTML.
-   
    
    *Important!*
    In the HTML examples differentiating the HTML and scala was easy because they're
@@ -223,167 +353,173 @@
    larger overlap.
    A big pitfall is vector types and indexing, since these make sense both in software
    and in hardware.
-   
-   Here's a rather silly example highligthing the confusion:
-   #+begin_src scala
-   class MyVector() extends Module {
-     val io = IO(
-       new Bundle {
-         val idx = Input(UInt(32.W))
-         val out = Output(UInt(32.W))
-       }
-     )
-   
-     val values = List(1, 2, 3, 4)
+
+
+*** Troubleshooting a vector design
+    Here's a rather silly example highligthing the confusion that can happen when mixing
+    scala and chisel.
+    
+    Some of the code here will cause compiler errors, thus the corresponding code in 
+    Examples/myVector.scala is commented out.
+    #+begin_src scala
+    class MyVector() extends Module {
+      val io = IO(
+        new Bundle {
+          val idx = Input(UInt(32.W))
+          val out = Output(UInt(32.W))
+        }
+      )
+    
+      val values = List(1, 2, 3, 4)
  
-     io.out := values(io.idx)
-   }
-   #+end_src
-   
-   If you try to compile this you will get an error.
-   
-   #+begin_src scala
-   sbt:chisel-module-template> compile
-   ...
-   [error]  found   : chisel3.core.UInt
-   [error]  required: Int
-   [error]   io.out := values(io.idx)
-   [error]                       ^
-   #+end_src
+      io.out := values(io.idx)
+    }
+    #+end_src
+    
+    If you try to compile this you will get an error.
+    
+    #+begin_src scala
+    sbt:chisel-module-template> compile
+    ...
+    [error]  found   : chisel3.core.UInt
+    [error]  required: Int
+    [error]   io.out := values(io.idx)
+    [error]                       ^
+    #+end_src
  
-   This error tells us that io.idx was of the wrong type, namely a chisel UInt.
-   The List is a scala construct, it only exists when your design is synthesized, so
-   attempting to index using a chisel type would be like HTML attempting to index the
-   generating scala code which is nonsensical.
-   Let's try again:
+    This error tells us that io.idx was of the wrong type, namely a chisel UInt.
+    The List is a scala construct, it only exists when your design is synthesized, so
+    attempting to index using a chisel type would be like HTML attempting to index the
+    generating scala code which is nonsensical.
+    Let's try again:
  
-   #+begin_src scala
-   class MyVector() extends Module {
-     val io = IO(
-       new Bundle {
-         val idx = Input(UInt(32.W))
-         val out = Output(UInt(32.W))
-       }
-     )
-   
-     // val values: List[Int] = List(1, 2, 3, 4)
-     val values = Vec(1, 2, 3, 4)
+    #+begin_src scala
+    class MyVector() extends Module {
+      val io = IO(
+        new Bundle {
+          val idx = Input(UInt(32.W))
+          val out = Output(UInt(32.W))
+        }
+      )
+    
+      // val values: List[Int] = List(1, 2, 3, 4)
+      val values = Vec(1, 2, 3, 4)
  
-     io.out := values(io.idx)
-   }
-   #+end_src
-   
-   Egads, now we get this instead
-   #+begin_src scala
-   [error] /home/peteraa/datateknikk/TDT4255_EX0/src/main/scala/Tile.scala:30:16: inferred type arguments [Int] do not conform to macro method apply's type parameter bounds [T <: chisel3.Data]
-   [error]   val values = Vec(1, 2, 3, 4)
-   [error]                ^
-   [error] /home/peteraa/datateknikk/TDT4255_EX0/src/main/scala/Tile.scala:30:20: type mismatch;
-   [error]  found   : Int(1)
-   [error]  required: T
-   [error]   val values = Vec(1, 2, 3, 4)
-   ...
-   #+end_src
+      io.out := values(io.idx)
+    }
+    #+end_src
+    
+    Egads, now we get this instead
+    #+begin_src scala
+    [error] /home/peteraa/datateknikk/TDT4255_EX0/src/main/scala/Tile.scala:30:16: inferred type arguments [Int] do not conform to macro method apply's type parameter bounds [T <: chisel3.Data]
+    [error]   val values = Vec(1, 2, 3, 4)
+    [error]                ^
+    [error] /home/peteraa/datateknikk/TDT4255_EX0/src/main/scala/Tile.scala:30:20: type mismatch;
+    [error]  found   : Int(1)
+    [error]  required: T
+    [error]   val values = Vec(1, 2, 3, 4)
+    ...
+    #+end_src
  
-   What is going wrong here? In the error message we see that the type Int cannot be constrained to a 
-   type T <: chisel3.Data, but what does that mean?
+    What is going wrong here? In the error message we see that the type Int cannot be constrained to a 
+    type T <: chisel3.Data, but what does that mean?
  
-   The <: symbol means subtype, meaning that the compiler expected the Vec to contain a chisel data type
-   such as chisel3.Data.UInt or chisel3.Data.Boolean, and Int is not one of them!
-   
-   A scala int represent 32 bits in memory, whereas a chisel UInt represents a bundle of wires that we
-   interpret as an unsigned integer, thus they are not interchangeable although they represent roughly
-   the same thing.
-   
-   Let's fix this
-   #+begin_src scala
-   class MyVector() extends Module {
-     val io = IO(
-       new Bundle {
-         val idx = Input(UInt(32.W))
-         val out = Output(UInt(32.W))
-       }
-     )
-   
-     val values = Vec(1.U, 2.U, 3.U, 4.U)
-     
-     // Alternatively
-     // val values = Vec(List(1, 2, 3, 4).map(scalaInt => UInt(scalaInt)))
+    The <: symbol means subtype, meaning that the compiler expected the Vec to contain a chisel data type
+    such as chisel3.Data.UInt or chisel3.Data.Boolean, and Int is not one of them!
+    
+    A scala int represent 32 bits in memory, whereas a chisel UInt represents a bundle of wires that we
+    interpret as an unsigned integer, thus they are not interchangeable although they represent roughly
+    the same thing.
+    
+    Let's fix this
+    #+begin_src scala
+    class MyVector() extends Module {
+      val io = IO(
+        new Bundle {
+          val idx = Input(UInt(32.W))
+          val out = Output(UInt(32.W))
+        }
+      )
+    
+      val values = Vec(1.U, 2.U, 3.U, 4.U)
+      
+      // Alternatively
+      // val values = Vec(List(1, 2, 3, 4).map(scalaInt => UInt(scalaInt)))
  
-     io.out := values(io.idx)
-   }
-   #+end_src
-   
-   This works!
-   So, it's impossible to access scala collections with chisel types, but can we do it the other way around?
-   
-   #+begin_src scala
-   class MyVector() extends Module {
-     val io = IO(
-       new Bundle {
-         val idx = Input(UInt(32.W))
-         val out = Output(UInt(32.W))
-       }
-     )
-   
-     val values = Vec(1.U, 2.U, 3.U, 4.U)
+      io.out := values(io.idx)
+    }
+    #+end_src
+    
+    This works!
+    So, it's impossible to access scala collections with chisel types, but can we do it the other way around?
+    
+    #+begin_src scala
+    class MyVector() extends Module {
+      val io = IO(
+        new Bundle {
+          val idx = Input(UInt(32.W))
+          val out = Output(UInt(32.W))
+        }
+      )
+    
+      val values = Vec(1.U, 2.U, 3.U, 4.U)
  
-     io.out := values(3)
-   }
-   #+end_src
-   
-   ...turns out we can?
-   This is nonsensical, however thanks to behind the scenes magic the 3 is changed
-   to 3.U, much like [] can be a boolean in javascript.
+      io.out := values(3)
+    }
+    #+end_src
+    
+    ...turns out we can?
+    This is nonsensical, however thanks to behind the scenes magic the 3 is changed
+    to 3.U, much like [] can be a boolean in javascript.
  
  
-   To get acquainted with the (rather barebones) testing environment, let's test this.
-   #+begin_src scala
-   class MyVecSpec extends FlatSpec with Matchers {
-     behavior of "MyVec"
-   
-     it should "Output whatever idx points to" in {
-       wrapTester(
-         chisel3.iotesters.Driver(() => new MyVector) { c =>
-           new MyVecTester(c)
-         } should be(true)
-       )
-     }
-   }
-   
-   
-   class MyVecTester(c: MyVector) extends PeekPokeTester(c)  {
-     for(ii <- 0 until 4){
-       poke(c.io.idx, ii)
-       expect(c.io.out, ii)
-     }
-   }
-   #+end_src
-   
-   #+begin_src
-   sbt:chisel-module-template> testOnly Ex0.MyVecSpec
-   ...
-   ...
-   [info] Compiling 1 Scala source to /home/peteraa/datateknikk/TDT4255_EX0/target/scala-2.12/test-classes ...
-   ...
-   ...
-   MyVecSpec:
-   MyVec
-   [info] [0.001] Elaborating design...
-   ...
-   Circuit state created
-   [info] [0.001] SEED 1556197694422
-   test MyVector Success: 4 tests passed in 5 cycles taking 0.009254 seconds
-   [info] [0.002] RAN 0 CYCLES PASSED
-   - should Output whatever idx points to
-   Run completed in 605 milliseconds.
-   Total number of tests run: 1
-   Suites: completed 1, aborted 0
-   Tests: succeeded 1, failed 0, canceled 0, ignored 0, pending 0
-   All tests passed.
-   #+end_src
+    To get acquainted with the (rather barebones) testing environment, let's test this.
+    #+begin_src scala
+    class MyVecSpec extends FlatSpec with Matchers {
+      behavior of "MyVec"
+    
+      it should "Output whatever idx points to" in {
+        wrapTester(
+          chisel3.iotesters.Driver(() => new MyVector) { c =>
+            new MyVecTester(c)
+          } should be(true)
+        )
+      }
+    }
+    
+    
+    class MyVecTester(c: MyVector) extends PeekPokeTester(c)  {
+      for(ii <- 0 until 4){
+        poke(c.io.idx, ii)
+        expect(c.io.out, ii)
+      }
+    }
+    #+end_src
+    
+    #+begin_src
+    sbt:chisel-module-template> testOnly Ex0.MyVecSpec
+    ...
+    ...
+    [info] Compiling 1 Scala source to /home/peteraa/datateknikk/TDT4255_EX0/target/scala-2.12/test-classes ...
+    ...
+    ...
+    MyVecSpec:
+    MyVec
+    [info] [0.001] Elaborating design...
+    ...
+    Circuit state created
+    [info] [0.001] SEED 1556197694422
+    test MyVector Success: 4 tests passed in 5 cycles taking 0.009254 seconds
+    [info] [0.002] RAN 0 CYCLES PASSED
+    - should Output whatever idx points to
+    Run completed in 605 milliseconds.
+    Total number of tests run: 1
+    Suites: completed 1, aborted 0
+    Tests: succeeded 1, failed 0, canceled 0, ignored 0, pending 0
+    All tests passed.
+    #+end_src
  
-   Great!
+    Great!
 
 ** Compile time and synthesis time
    In the HTML example, assume that we omitted the last </ul> tag. This would not
@@ -472,7 +608,7 @@
    If it happens to contain values of chisel types then these will exist in the design, however the
    collection will not, so we cannot index based on the collection.
    
-   This can be seen in ~myIncrementN~ where an array of incrementors is used.
+   This can be seen in ~MyIncrementN~ where an array of incrementors is used.
    The array is only used help the scala program wire the components together, and once this is
    done the array is not used.
    We could do the same with MyVector, but it's not pretty:
@@ -504,7 +640,7 @@
    as we will see in the next section.
    
  
- ** Bit Widths
+** Bit Widths
    What happens if we attempt to index the 6th element in our 4 element vector?
    In MyVector we get 1, and in MyVector2 we get 0, so they're not exactly the same.
    In MyVector the Vec has 4 elements, thus only two wires are necessary (00, 01, 10, 11),
@@ -606,7 +742,7 @@
    Much better..
    
    You should now be able to implement myDelayN following the same principles as
-   myIncrementN
+   MyIncrementN
    
    #+begin_src scala
    class myDelayN(delay: Int) extends Module {
@@ -631,12 +767,17 @@
    ?
 
 ** Debugging
-   A rather nasty pain point in chisel is the debuggability.
-   In order to inspect our circuits we have two main tools, the peekPokeTester and trusty
-   old printf, however both have huge flaws.
+   A rather difficult aspect in HDLs, including chisel is debugging.
+   When debugging it is necessary to inspect how the state of the circuit evolves, which
+   leaves us with two options, peekPokeTester and printf, however both have flaws.
 
 *** Printf
     Printf statements will be executed once per clock cycle if the surrounding block is executed.
+    The way printf statements work is that they create a special abstract hardware element that
+    sends a message to your console whenever it is enabled (i.e. when it is either at the top
+    level of a module, or in a conditional block whose condition has been met).
+
+
     This means we can put a printf statement in a module and have it print some state every 
     cycle, and we can put it inside a when block in order to conditionally print.
     

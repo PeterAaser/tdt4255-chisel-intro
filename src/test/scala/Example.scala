@@ -1,95 +1,3 @@
-/**
-  * This code supplements instructions.org
-  * Once you've gone through the instructions you can do
-  * whatever you want with it.
-  */
-package Ex0
-
-import chisel3._
-import chisel3.iotesters.PeekPokeTester
-import org.scalatest.{Matchers, FlatSpec}
-import TestUtils._
-
-// class MyVector() extends Module {
-//   val io = IO(
-//     new Bundle {
-//       val idx = Input(UInt(32.W))
-//       val out = Output(UInt(32.W))
-//     }
-//   )
-
-//   val values = List(1, 2, 3, 4)
-
-//   io.out := values(io.idx)
-// }
-
-// class MyVector() extends Module {
-//   val io = IO(
-//     new Bundle {
-//       val idx = Input(UInt(32.W))
-//       val out = Output(UInt(32.W))
-//     }
-//   )
-
-//   // val values: List[Int] = List(1, 2, 3, 4)
-//   val values = Vec(1, 2, 3, 4)
-
-//   io.out := values(io.idx)
-// }
-
-class MyVector() extends Module {
-  val io = IO(
-    new Bundle {
-      val idx = Input(UInt(32.W))
-      val out = Output(UInt(32.W))
-    }
-  )
-
-  val values = Vec(0.U, 1.U, 2.U, 3.U)
-
-  io.out := values(io.idx)
-}
-
-
-class MyVector2() extends Module {
-  val io = IO(
-    new Bundle {
-      val idx = Input(UInt(2.W))
-      val out = Output(UInt(32.W))
-    }
-  )
-
-  val values = Array(0.U, 1.U, 2.U, 3.U)
-
-  val myWire = Wire(UInt(4.W))
-  io.out := values(0)
-  for(ii <- 0 until 4){
-    when(io.idx === ii.U){
-      io.out := values(ii)
-    }
-  }
-}
-
-
-class MyVecSpec extends FlatSpec with Matchers {
-  behavior of "MyVec"
-
-  it should "Output whatever idx points to" in {
-    wrapTester(
-      chisel3.iotesters.Driver(() => new MyVector2) { c =>
-        new MyVecTester(c)
-      } should be(true)
-    )
-  }
-}
-
-
-class MyVecTester(c: MyVector2) extends PeekPokeTester(c)  {
-  for(ii <- 0 until 4){
-    poke(c.io.idx, ii)
-    expect(c.io.out, ii)
-  }
-}
 
 
 class Invalid() extends Module {
@@ -250,6 +158,41 @@ class EvilPrintfSpec extends FlatSpec with Matchers {
     wrapTester(
       chisel3.iotesters.Driver(() => new CountTo3) { c =>
         new CountTo3Test(c)
+      } should be(true)
+    )
+  }
+}
+
+
+
+class PrintfExampleSpec extends FlatSpec with Matchers {
+
+  class PrintfExample() extends Module {
+    val io = IO(new Bundle{})
+    
+    val counter = RegInit(0.U(8.W))
+    counter := counter + 1.U
+  
+    printf("Counter is %d\n", counter)
+    when(counter % 2.U === 0.U){
+      printf("Counter is even\n")
+    }
+  }
+
+  class PrintfTest(c: PrintfExample) extends PeekPokeTester(c)  {
+    for(ii <- 0 until 5){
+      println(s"At cycle 0:")
+      step(1)
+    }
+  }
+
+
+  behavior of "Printf Example"
+
+  it should "print" in {
+    wrapTester(
+      chisel3.iotesters.Driver(() => new PrintfExample) { c =>
+        new PrintfTest(c)
       } should be(true)
     )
   }

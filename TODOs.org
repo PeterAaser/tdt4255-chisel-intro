@@ -1,9 +1,51 @@
-
-* Points
-  Test strategy
-
-  Fuck å gjøre det ordentlig, det blir bare kaos
-
 * Tutorials
   https://github.com/ucb-bar/generator-bootcamp
   https://github.com/ucb-bar/chisel-tutorial/wiki/chisel-installation
+  
+** Make it a bit more clear how to install and run things. 
+   I expect a lot of students are like me and want to try things out
+   straight away, and currently that leads to interesting places
+   (although not places the students necessarily need to go)
+
+** Modules in VHDL/Verilog are primarily used to manage parallelism. 
+   I suppose it would be the same for Chisel.
+
+** Running compile in the example that should not compile does not give an error for me. 
+   When I test, it does. So some probably info is missing.
+
+** Tester tests MyVector2 but MyVector is described in the wiki. 
+   There shouldn’t be any unused code in the example as this can
+   easily confuse students.
+
+** It would be useful to explain the testOnly ex0.somethingrather syntax somewhere. 
+   What are the alternatives to testOnly? What are the syntax and
+   semantics of what comes after? How can the students find it in the
+   code?
+
+** There’s a bunch of spelling mistakes so you should proofread carefully once everything is written.
+
+** The myDelayN exercise is not fully specified and it is ages since the myIncrementN example was used. 
+   Either cut or properly specify. If the latter, it is probably
+   better to start with a partially filled in source file.
+
+** Regarding printf, you must explain why it lies. If not, this will confuse students. 
+   Also, you need to explain why the peek-poke tester cannot peek
+   access internals. I suppose this because the Chisel module has
+   already been compiled when it runs which means that the internals
+   no longer exist.
+
+** Also, you need to cover the difference between println and printf as you use println in your code.
+
+** It’s hard to get started with the exercises. 
+   How about partially filling in a Vector definition that the
+   students can complete. There’s a lot of code in the example and
+   it’s not obvious where to start (the text even states that there is
+   skeleton code but I can only find the test code).
+
+** Write enable and read enable have specific meanings. 
+   Write enable means that the content is updated to a new value, read
+   enable means that data outputs are set to active after a predefined
+   delay. The use case of read enable signals are usually
+   bi-directional busses. Otherwise, the value is simply outputted and
+   the module receiving the output simply ignores it if it didn’t ask
+   for anything.
