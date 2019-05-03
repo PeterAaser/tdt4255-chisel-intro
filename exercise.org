@@ -1,0 +1,111 @@
+* Matrix matrix multiplication
+  For your first foray into chisel you will design a matrix matrix multiplication unit.
+  Matrix multiplication is fairly straight forward, however on hardware it's a little
+  trickier than the standard for loops normally employed..
+  
+** Task 1 - Vector
+   The first component you should implement is a register bank for storing a vector.
+   
+   In Vector.scala you will find the skeleton code for this component.
+   Unlike the standard Chisel.Vec our custom vector has a read enable which means that
+   the memory pointed to by idx will only be overWritten when readEnable is true.
+
+   Implement the vector and test that it works by running
+   ~testOnly Ex0.VectorSpec~ in your sbt console.
+   
+** Task 2 - Matrix
+   The matrix works just like the vector only in two dimensions.
+   The skeleton code and associated tests should make the purpose of this module obvious.
+   Run the tests with ~testOnly Ex0.VectorSpec~
+   
+** Task 3 - Dot Product
+   This component differs from the two previous in that it has no explicit control input,
+   which might at first be rather confusing.
+   
+   With only two inputs for data, how do we know when the dotproduct has been calculated?
+   The answer to this is the ~elements~ argument, which tells the dot product calculator the
+   size of the input vectors.
+   Consequently, the resulting hardware can only (at least on its own) compute dotproducts
+   for one size of vector, which is fine in our circuit.
+   
+   To get a better understanding we can model this behavior in regular scala:
+
+   #+begin_src scala
+   case class DotProdCalculator(vectorLen: Int, timeStep: Int, accumulator: Int){
+     def update(inputA: Int, inputB: Int): (Int, Boolean, DotProdCalculator) = {
+       val product = inputA * inputB
+       if(((timeStep + 1) % vectorLen) == 0){
+         (accumulator + product, true, this.copy(timeStep = 0, accumulator = 0))
+       else
+         (accumulator + product, false, this.copy(timeStep = this.timeStep + 1, accumulator = accumulator + product))
+       }
+     }
+   }
+   #+end_src
+
+   To see it in action run ~testOnly Ex0.DPCsimulatorSpec~ in your sbt console.
+   
+   As with the previous tasks, the dot product calculator must pass the tests with
+   ~testOnly Ex0.DotProdSpec~
+
+
+** Task 4 - Matrix Matrix multiplication
+   With our matrix modules and dot product calculators we have every piece needed to 
+   implement the matrix multiplier.
+
+   When performing matrix multiplication on a computer transposing the second matrix
+   can help us reduce complexity by quite a lot. To examplify, consider 
+      
+   #+begin_src
+       | 2,  5 |
+   A = | 7, -1 |
+       | 0,  4 |
+       
+
+   B = | 1,  1,  2 |
+       | 0,  4,  0 |
+   #+end_src
+   
+   It would be much simpler to just have two modules with the same dimensions, and we
+   can do this by transposing B so we get
+       
+   #+begin_src
+        | 2,  5 |
+   A  = | 7, -1 |
+        | 0,  4 |
+       
+        | 1,  0 |
+   BT = | 1,  4 |
+        | 2,  0 |
+   #+end_src
+   
+   Now we need to do is calculate the dot products for the final matrix:
+
+   #+begin_src
+   if A*B = C then
+
+        |  A[0] × BT[0],   A[0] × BT[1],   A[0] × BT[2] |
+   C  = |  A[1] × BT[0],   ...         ,   ...          |
+        |  ...         ,   ...         ,   A[2] × BT[2] |
+
+   where 
+   A[0] × BT[0] is the dot product of [2, 5] and [1, 0]
+   and
+   A[0] × BT[1] is the dot product of [2, 5] and [1, 4]
+   and so forth..
+   #+end_src
+   
+   Because of this, the input for matrix B will be supplied transposed, thus you do not
+   have to worry about this. For B the input would be [1, 0, 1, 4, 2, 0]
+   
+   The skeleton code for the matrix multiplier is less detailed, with only one test.
+   You're encouraged to write your own tests to make this easier.
+   Additionally, if you feel like you're getting stuck you can take a look at 
+   MatMulTips.org
+       
+** Bonus exercise - Introspection on code quality and design choices
+   This last exercise has no deliverable, but you should spend some time thinking about
+   where you spent most of your efforts.
+
+   A common saying is "A few hours of work can save you from several minutes of planning", 
+   and this holds especially true for writing chisel!!
