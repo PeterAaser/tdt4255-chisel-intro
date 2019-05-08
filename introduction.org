@@ -139,8 +139,6 @@
    
    This is done by creating a test program where the test runner drives inputs and reads outputs from 
    the module using what is called a peek poke tester.
-   
-
 *** Creating a peek poke tester
     #+begin_src scala
     class TheTestRunner(c: MyIncrement) extends PeekPokeTester(c)  {

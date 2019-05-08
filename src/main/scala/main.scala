@@ -9,3 +9,4 @@ object main {
     println(s)
   }
 }
+

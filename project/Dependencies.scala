@@ -35,6 +35,10 @@ object Dependencies {
 
       "com.github.pathikrit" %% "better-files" % "3.7.0",
 
-      "org.atnos" %% "eff" % "5.2.0"
+      "org.atnos" %% "eff" % "5.2.0",
+
+
+      "org.scala-lang.modules" %% "scala-swing" % "2.1.1",
+      "org.apache.xmlgraphics" % "batik-swing" % "1.11"
       ))
 }

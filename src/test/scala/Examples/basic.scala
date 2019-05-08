@@ -94,3 +94,42 @@ class MyIncrementManyTest extends FlatSpec with Matchers {
     } should be(true)
   }
 }
+
+
+
+class ChiselConditional() extends Module {
+  val io = IO(
+    new Bundle {
+      val a = Input(UInt(32.W))
+      val b = Input(UInt(32.W))
+      val opSel = Input(Bool())
+
+      val out = Output(UInt(32.W))
+    }
+  )
+
+  when(io.opSel){
+    io.out := io.a + io.b
+  }.otherwise{
+    io.out := io.a - io.b
+  }
+}
+
+
+
+class ScalaConditional(opSel: Boolean) extends Module {
+  val io = IO(
+    new Bundle {
+      val a = Input(UInt(32.W))
+      val b = Input(UInt(32.W))
+
+      val out = Output(UInt(32.W))
+    }
+  )
+
+  if(opSel){
+    io.out := io.a + io.b
+  } else {
+    io.out := io.a - io.b
+  }
+}

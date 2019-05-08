@@ -1,6 +1,7 @@
 package Ex0
 
 import chisel3._
+import chisel3.experimental._
 import chisel3.iotesters.PeekPokeTester
 import org.scalatest.{Matchers, FlatSpec}
 import TestUtils._
@@ -15,6 +16,7 @@ class VectorSpec extends FlatSpec with Matchers {
   behavior of "Vector"
 
   it should "Not read data when read enable is false" in {
+    // FileUtils.getSvg("Adder")
     wrapTester(
       chisel3.iotesters.Driver(() => new Vector(elements)) { c =>
         new ReadEnable(c)
@@ -22,25 +24,26 @@ class VectorSpec extends FlatSpec with Matchers {
     )
   }
 
-  it should "Update its registers when read enable is true" in {
-    wrapTester(
-      chisel3.iotesters.Driver(() => new Vector(elements)) { c =>
-        new UpdatesData(c)
-      } should be(true)
-    )
-  }
+  // it should "Update its registers when read enable is true" in {
+  //   wrapTester(
+  //     chisel3.iotesters.Driver(() => new Vector(elements)) { c =>
+  //       new UpdatesData(c)
+  //     } should be(true)
+  //   )
+  // }
 
-  it should "Retain its data once read enable is set to false" in {
-    wrapTester(
-      chisel3.iotesters.Driver(() => new Vector(elements)) { c =>
-        new UpdatesData(c)
-      } should be(true)
-    )
-  }
+  // it should "Retain its data once read enable is set to false" in {
+  //   wrapTester(
+  //     chisel3.iotesters.Driver(() => new Vector(elements)) { c =>
+  //       new RetainsData(c)
+  //     } should be(true)
+  //   )
+  // }
 }
 
-object VectorTests {
 
+object VectorTests {
+  
   class ReadEnable(c: Vector) extends PeekPokeTester(c)  {
 
     poke(c.io.dataIn, 123)

@@ -24,11 +24,11 @@ def javacOptionsVersion(scalaVersion: String): Seq[String] = {
   }
 }
 
-name := "chisel-module-template"
+name := "chisel intro"
 
 version := "3.1.0"
 
-scalaVersion := "2.12.4"
+scalaVersion := "2.12.8"
 
 crossScalaVersions := Seq("2.11.12", "2.12.4")
 
@@ -66,3 +66,8 @@ addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.fu
 
 
 testOptions in Test += Tests.Argument(TestFrameworks.ScalaTest, "-eS")
+
+run := Defaults.runTask(fullClasspath in Runtime, mainClass in run in Compile, runner in run).evaluated
+
+cancelable in Global := true
+fork := true
