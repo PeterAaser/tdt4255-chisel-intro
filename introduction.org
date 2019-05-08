@@ -4,6 +4,8 @@
   In this exercise you will implement a circuit capable of performing matrix 
   matrix multiplication in the chisel hardware description language.
   
+  The 
+  
 * Chisel
 ** Prerequisites
    + *You should have some idea of how digital logic circuits work.*

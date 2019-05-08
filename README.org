@@ -2,11 +2,12 @@ This is the chisel intro for the TDT4255 course at NTNU.
 If you use it for your course, please let me know how it went and feel 
 free (or even slightly pressured) to submit pull requests with improvements.
 
+In order to get started you should go through the introductory material:
+Introduction to hardware description languages: [[./hdl.org]]
+
 Instructions can be found in oppgavetekst.org (read it in github if your preferred
 reader does not support .org markdown)
 
-TODO: Installation instructions, link to scala primer and link to other tutorials.
-Also lacking images, they're on the way.
 
 The main course(work) for creating a 5-stage RISCV pipeline can be found here
 https://github.com/PeterAaser/TDT4255_EX2
