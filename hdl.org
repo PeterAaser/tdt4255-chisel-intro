@@ -136,3 +136,5 @@
    
    These toolchains are generally not very fun to use, not only because they are made by very very
    evil people, but because hardware is a difficult, complex and complicated domain.
+
+   You can now take a look at the [[./introduction.org][chisel introduction]].

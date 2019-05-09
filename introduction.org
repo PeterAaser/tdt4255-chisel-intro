@@ -1,12 +1,4 @@
-* Excercise Zero
-  The goal of this excercise is to gain some familiarity with developing for 
-  FPGAs using chisel. 
-  In this exercise you will implement a circuit capable of performing matrix 
-  matrix multiplication in the chisel hardware description language.
-  
-  The 
-  
-* Chisel
+* Writing chisel
 ** Prerequisites
    + *You should have some idea of how digital logic circuits work.*
 
@@ -24,6 +16,7 @@
 
      If you use anything other than Ubuntu 16.04 or 18.04 I won't be able to offer
      help if something goes wrong.
+     Running chisel on OSX is probably possible, but you'll have to figure it out yourself.
 
    + *An editor suited for scala.*
 
@@ -32,13 +25,17 @@
      server protocol), such as vim, vscode and atom).
      If you prefer an IDE I hear good things about intelliJ, however I haven't tested
      it personally, so if odd stuff happens I can't help you.
+     *DON'T NEGLECT THIS!*
+     This course is hard enough as it is, no point making it harder by neglecting basic IDE
+     functionality. There are plenty of good options, no matter if you're a vim user or prefer
+     GUI based full fledged IDEs.
 
    + *Optional: sbt*
 
      You can install the scala build tool on your system, but for convenience I've
      included a bootstrap script in sbt.sh.
-     sbt will select the correct version for you, so you don't have to worry about
-     getting the wrong version.
+     If you want to install sbt on your own machine, sbt will select the correct version 
+     on a per-project basis for you, so you don't have to worry about getting the wrong version.
 
 
 ** Terms
@@ -98,6 +95,13 @@
      A circuit that will give different results based on its internal state.
      In common parlance, a circuit without registers (or memory) is combinatory
      while a circuit with registers is stateful.
+
+   + *Clock*
+     
+     The clock is omnipresent in chisel, which paradoxically leads to it being nearly invisible.
+     Every register in chisel is automatically wired up to the clock signal, and it may only update
+     its contents when the clock ticks.
+     Typically the term *cycle* is used to describe a single clock tick.
  
    + *Chisel Graph*
 
@@ -131,8 +135,11 @@
    #+end_src
    
    with incrementBy = 3 we get the following circuit:
-   TODO: Fig
+   [[./Images/myInc.png]]
    
+   The code for this circuit as well as the tests described next subsection can be found in
+   [[./src/test/scala/Examples/basic.scala][src/test/scala/Examples/basic.scala]]
+
 
 ** Testing your chisel component
    After creating a module you might wonder how it can be run.
@@ -169,10 +176,10 @@
    
 *** Running a peek poke tester
     The test runner class we have defined requires a MyIncrement module that can be simulated.
-    However, by writing ~val inc3 = Module(new MyIncrement(3))~ the return value is a *chisel graph*,
-    i.e a schematic for a circuit.
-    In order to interact with a circuit the schematic must be interpreted, resulting in a simulated
-    circuit which the peek poke tester can interact with.
+    However, by writing ~val inc3 = Module(new MyIncrement(3))~ the return value is a /chisel graph/,
+    which if you recall from the hdl introduction is not enough to actually test the circuit.
+    In order to interact with a circuit the schematic must be interpreted, resulting in a 
+    *circuit simulator* which the peek poke tester can interact with.
     
     If this isn't clear don't worry, in terms of code all we need to do is to invoke a chisel method for
     building the circuit:
@@ -211,7 +218,7 @@
     The tester class introduces a lot of special syntax, but like above it is not necessary 
     to understand how, simply using the template above is sufficient.
 
-    Applying the tester template we end up with:
+    By applying our circuit description and test class to the tester template we end up with:
 
     #+begin_src scala
     class MyIncrementTest extends FlatSpec with Matchers {
@@ -219,7 +226,9 @@
     
       it should "increment its input by 3" in {
         chisel3.iotesters.Driver(() => new MyIncrement(3)) { c =>
+	//                                 ^^^^^^^^^^^^^^^ The component we want to test
           new TheTestRunner(c)
+	  //  ^^^^^^^^^^^^^^^^ The tester we want to run
         } should be(true)
       }
     }
@@ -289,42 +298,67 @@
    To see how this can be done it is necessary to take a detour:
 
 
-** Scala and chisel
-   A major stumbling block for learning chisel is understanding the difference between scala and chisel.
-   To highlight the difference between the two consider how HTML is generated.
- 
-   When creating a list we could just write the HTML manually
-   #+begin_src html
-   <ul>
-     <li>Name: Siv Jensen, Affiliation: FrP</li>
-     <li>Name: Jonas Gahr Støre, Affiliation: AP</li>
-     <li>Name: Bjørnar Moxnes, Affiliation: Rødt</li>
-     <li>Name: Malcolm Tucker, Affiliation: DOSAC</li>
-   </ul>
-   #+end_src
-   
-   However this is rather cumbersome, so we generate HTML programatically.
-   In scala we might do something (sloppy) like this:
+** Leveraging Chisel with Scala
+   Recall from the hdl chapter how a chisel program is using scala to build chisel.
+   To give an idea of what that means let's consider conditional statements in chisel:
    #+begin_src scala
-   def generateList(politicians: List[String], affiliations: Map[String, String]): String = {
-     val inner = new ArrayBuffer[String]()
-     for(ii <- 0 until politicians.size){
-       val nameString = politicians(ii)
-       val affiliationString = affiliations(nameString)
-       inner.add(s"<li>Name: $nameString, Affiliation: $affiliationString</li>")
+   class ChiselConditional() extends Module {
+     val io = IO(
+       new Bundle {
+         val a = Input(UInt(32.W))
+         val b = Input(UInt(32.W))
+         val opSel = Input(Bool())
+   
+         val out = Output(UInt(32.W))
+       }
+     )
+   
+     when(io.opSel){
+       io.out := io.a + io.b
+     }.otherwise{
+       io.out := io.a - io.b
      }
-     "<ul>\n" + inner.mkString("\n") + "</ul>"
-   }
- 
-   // Or if you prefer brevity
-   def generateList2(politicians: List[String], affiliations: Map[String, String]): String = {
-     val inner = politicians.map(p => s"<li>Name: $p, Affiliation ${affiliations(p)}</li>")
-     "<ul>\n" + inner.mkString("\n") + "</ul>"
    }
    #+end_src
    
-   Similarily we can use constructs such as for loops to manipulate the chisel graph:
+   This code describes the following circuit:
+   [[./Images/ChiselConditional.png]]
+
+   If the RTL is unfamiliar, the two leftmost components are ALUs which do arithmetic (addition and 
+   subtraction in this case)
+   The rightmost component is a multiplexer which selects an input signal based on a selector signal,
+   kind of like a railroad switch.
+
+   These conditional statements are implemented at a hardware level, but what is their relation to scalas
+   if else statements?
    
+   Lets consider an example using if and else:
+   #+begin_src scala
+   class ScalaConditional(opSel: Boolean) extends Module {
+     val io = IO(
+       new Bundle {
+         val a = Input(UInt(32.W))
+         val b = Input(UInt(32.W))
+   
+         val out = Output(UInt(32.W))
+       }
+     )
+   
+     if(opSel){
+       io.out := io.a + io.b
+     } else {
+       io.out := io.a - io.b
+     }
+   }
+   #+end_src
+   
+   Which can yield two different circuits depending on the opSel argument:
+   [[./Images/ScalaCond1.png]]
+   [[./Images/ScalaCond2.png]]
+
+
+   Let's look at how we can use another scala construct, the for loop, to create several
+   modules and chain them together:
    #+begin_src scala
    class MyIncrementN(val incrementBy: Int, val numIncrementors: Int) extends Module {
      val io = IO(
@@ -347,20 +381,18 @@
    Keep in mind that the for-loop only exists at design time, just like a for loop
    generating a table in HTML will not be part of the finished HTML.
    
-   *Important!*
-   In the HTML examples differentiating the HTML and scala was easy because they're
-   fundamentally very different. However with hardware and software there is a much
-   larger overlap.
-   A big pitfall is vector types and indexing, since these make sense both in software
-   and in hardware.
-
-
 *** Troubleshooting scala and chisel mixups
-    Here's a rather silly example highligthing the confusion that can happen when mixing
-    scala and chisel.
+    With the when/otherwise and if/else example the meanings were different, as showed in
+    the resulting circuitry.
+    It is typical to accidentally mix up chisel and scala however, and typically this will
+    not yield a valid program, instead you get compiler errors, which if you recall the
+    toolchain figure in the HDL chapter corresponds to the compiler stage between scala code 
+    and a chisel graph builder.
+
+    To show some typical errors consider the following code which can be found in
+    [[./src/test/scala/Examples/basic.scala][src/test/scala/Examples/myVector.scala]]
+    (The non-compiling examples are commented out)
     
-    Some of the code here will cause compiler errors, thus the corresponding code in 
-    Examples/myVector.scala is commented out.
     #+begin_src scala
     class MyVector() extends Module {
       val io = IO(
@@ -376,10 +408,11 @@
     }
     #+end_src
     
-    If you try to compile this you will get an error.
+    If you uncomment and try to compile this you will get an error:
+    (only running compile works, as it will only compile the code in src/main*)
     
     #+begin_src scala
-    sbt:chisel-module-template> compile
+    sbt:chisel-module-template> test:compile
     ...
     [error]  found   : chisel3.core.UInt
     [error]  required: Int
@@ -391,7 +424,7 @@
     The List is a scala construct, it only exists when your design is synthesized, thus
     attempting to index it with a chisel type does not make sense.
 
-    Let's try again using a chisel Vec which can be indexed by chisel values:
+    Let's try again using a chisel ~Vec~ which can be indexed by chisel values:
     #+begin_src scala
     class MyVector() extends Module {
       val io = IO(
@@ -410,6 +443,8 @@
     
     Now you will get the following error instead:
     #+begin_src scala
+    sbt:chisel-module-template> test:compile
+    ...
     [error] /home/peteraa/datateknikk/TDT4255_EX0/src/main/scala/Tile.scala:30:16: inferred type arguments [Int] do not conform to macro method apply's type parameter bounds [T <: chisel3.Data]
     [error]   val values = Vec(1, 2, 3, 4)
     [error]                ^
@@ -427,9 +462,11 @@
     such as chisel3.Data.UInt or chisel3.Data.Boolean, and Int is not one of them!
     
     A scala int represent 32 bits in memory, whereas a chisel UInt represents a bundle of wires that we
-    interpret as an unsigned integer, thus they are not interchangeable although they represent roughly
-    the same thing.
+    interpret as an unsigned integer, thus they are not interchangeable.
+    The difference between ~scala.Integer~ and ~chisel3.Data.UInt~ is analogous to that of if/else vs 
+    when/otherwise seen in the previous section.
     
+    To fix this, chisel UInts must be used
     #+begin_src scala
     class MyVector() extends Module {
       val io = IO(
@@ -464,55 +501,10 @@
       io.out := values(3)
     }
     #+end_src
-    In this case 3 gets automatically changed to 3.U. 
+    In this case ~3~ gets automatically changed to ~3.U~.
     It's not a great idea to abuse implicit conversions, so you should refrain from doing this too much.
- 
-
-    #+begin_src scala
-    class MyVecSpec extends FlatSpec with Matchers {
-      behavior of "MyVec"
-    
-      it should "Output whatever idx points to" in {
-        wrapTester(
-          chisel3.iotesters.Driver(() => new MyVector) { c =>
-            new MyVecTester(c)
-          } should be(true)
-        )
-      }
-    }
-    
-    class MyVecTester(c: MyVector) extends PeekPokeTester(c)  {
-      for(ii <- 0 until 4){
-        poke(c.io.idx, ii)
-        expect(c.io.out, ii)
-      }
-    }
-    #+end_src
-    
-    #+begin_src
-    sbt:chisel-module-template> testOnly Examples.MyVecSpec
-    ...
-    ...
-    [info] Compiling 1 Scala source to /home/peteraa/datateknikk/TDT4255_EX0/target/scala-2.12/test-classes ...
-    ...
-    ...
-    MyVecSpec:
-    MyVec
-    [info] [0.001] Elaborating design...
-    ...
-    Circuit state created
-    [info] [0.001] SEED 1556197694422
-    test MyVector Success: 4 tests passed in 5 cycles taking 0.009254 seconds
-    [info] [0.002] RAN 0 CYCLES PASSED
-    - should Output whatever idx points to
-    Run completed in 605 milliseconds.
-    Total number of tests run: 1
-    Suites: completed 1, aborted 0
-    Tests: succeeded 1, failed 0, canceled 0, ignored 0, pending 0
-    All tests passed.
-    #+end_src
- 
-    Great!
+    The version above can be run with:
+    ~sbt:chisel-module-template> testOnly Examples.MyVecSpec~
 
     
     In order to get some insight into how a chisel Vec works, let's see how we can implement
@@ -551,13 +543,16 @@
     ~io.idx(1, 0) === ii.U)~
     which indicates that only the two low bits of idx will be used to index, which is
     how chisel Vec does it.
-    
+
+    From this you can gather that a chisel Vec doesn't really exist on the resulting circuit.
+    Then again, an array is nothing more than an address, so this is in some respects analogous
+    to how a computer works.
 
 *** Troubleshooting build time errors
     In the HTML example, assume that the the last </ul> tag was ommited. This would not
     be valid HTML, however the code will happily compile. Likewise, you can easily
-    create a valid scala program producing an invalid chisel graph:
- 
+    create a valid scala program producing an invalid chisel graph, such as this module found in
+    [[./src/test/scala/Examples/basic.scala][src/test/scala/Examples/invalidDesigns.scala]]
     #+begin_src scala
     class Invalid() extends Module {
       val io = IO(new Bundle{})
@@ -567,8 +562,8 @@
     #+end_src
  
     This code will happily compile, however when you attempt to create a simulator from the
-    schematic chisel will throw an exception.
-    
+    chisel graph the driver will throw an exception.
+    To see this you can run the following test (already implemented in invalidDesigns.scala):
     #+begin_src scala
     class InvalidSpec extends FlatSpec with Matchers {
       behavior of "Invalid"
@@ -586,10 +581,13 @@
     }
     #+end_src
     
-    Running the test throws an error:
-    #+begin_src scala
-    sbt:chisel-module-template> compile
+    #+begin_src
+    sbt:chisel-module-template> compile:test
     ...
+    #+end_src
+    As promised, this code compiles, but when you run the test which actually builds a simulator you
+    get the following:
+    #+begin_src
     [success] Total time: 3 s, completed Apr 25, 2019 3:15:15 PM
     ...
     sbt:chisel-module-template> testOnly Examples.InvalidSpec
@@ -609,12 +607,12 @@
     #+end_src
     
     While scary, the actual error is only this line:
-    #+begin_src scala
+    #+begin_src
     firrtl.passes.CheckInitialization$RefNotInitializedException: @[Example.scala 25:21:@20.4] : [module Invalid]  Reference myVec is not fully initialized.
      : myVec.io.idx <= VOID
     #+end_src
     
-    Which tells you that myVec.io.idx needs a driver.
+    Which tells you that myVec.io.idx is unconnected, i.e it needs a driver.
     #+begin_src scala
     // Now actually valid...
     class Invalid() extends Module {
@@ -627,7 +625,7 @@
     After fixing the invalid circuit and running the test you will insted get a large error 
     stack trace where you will see that:
     ~- should fail *** FAILED ***~
-    Which in some respect indicates success.
+    Which I suppose indicates success.
 
 
 ** Stateful circuits
@@ -658,12 +656,15 @@
    When testing we use the ~step(n)~ feature of peek poke tester which runs the clock signal n times.
    
    Test this by running ~testOnly Examples.DelaySpec~
+   The code for this is already implemented in 
+   [[./src/test/scala/Examples/basic.scala][src/test/scala/Examples/stateful.scala]]
    #+begin_src scala
    class DelaySpec extends FlatSpec with Matchers {
      behavior of "SimpleDelay"
    
      it should "Delay input by one timestep" in {
        chisel3.iotesters.Driver(() => new SimpleDelay, verbose = true) { c =>
+       //                                              ^^^^^^^^^^^^^^ Optional parameter verbose set to true
          new DelayTester(c)
        } should be(true)
      }
@@ -706,16 +707,18 @@
    Following the output you can see how at step 0 the input is 7, then at step 1 
    the expected (and observed) output is 7.
 
-
 ** Debugging
    A rather difficult aspect in HDLs, including chisel is debugging.
    When debugging it is necessary to inspect how the state of the circuit evolves, which
    leaves us with two options, peekPokeTester and printf, however both have flaws.
 
+   Code for this section can be found at 
+   [[./src/test/scala/Examples/basic.scala][src/test/scala/Examples/printing.scala]]
+
 *** PeekPoke
     The peek poke tester should always give a correct result, if not it's a bug, not a quirk.
-    Sadly peek poke testing is rather limited in that it cannot be used to access internal state.
-    Consider the following module:
+    Sadly, peek poke testing is rather limited in that it cannot be used to access *internal state*.
+    Consider the following nested modules:
     #+begin_src scala
     class Inner() extends Module {
       val io = IO(
@@ -751,12 +754,11 @@
     #+end_src
     
     It would be nice if we could use the peekPokeTester to inspect what goes on inside
-    Inner, however this information is no longer available once Outer is synthesize into a 
-    runnable circuit.
+    Inner, however this information is no longer available once Outer is rendered into a
+    circuit simulator.
     
     To see this, run ~testOnly Example.PeekInternalSpec~
-
-    In the test an exception is thrown when either of the two peek statements underneath are
+    Which throws an exception is thrown when either of the two peek statements underneath are
     run:
     #+begin_src scala
     class OuterTester(c: Outer) extends PeekPokeTester(c)  {
@@ -766,12 +768,11 @@
     #+end_src
     
     The only way to deal with this hurdle is to expose the state we are interested in as signals.
-    An example of this can be seen in 
-    ~/Examples/printing.scala~
+    An example of this can be seen in in the bottom of printing.scala
     
     This approach leads to a lot of annoying clutter in your modules IO, so to separate business-logic
     from debug signals it is useful to use a MultiIOModule where debug signals can be put in a separate
-    io bundle. This approach is used in the skeleton code for the exercises.
+    io bundle.
 
 *** printf
     ~printf~ and ~println~ must not be mixed!
@@ -779,7 +780,7 @@
     In the tests so far it has only printed the value returned by peek.
 
     a printf statement on the other hand does not immediately print anything to the console. Instead it creates
-    a special chisel element which only exists during simulation and prints to your console each cycle, 
+    a special chisel element which only exists during simulation and prints to your console each clock cycle,
     thus helping us peer into the internal state of a circuit!
     
     Additionally, a printf statement in a conditional block will only execute if the condiditon is met,
@@ -837,4 +838,7 @@
     
     (It is possible to use a different simulator, treadle, which from what I have seen gives correct 
     printf results, it can be used by supplying an extra argument in the peek poke constructor like so:
-    ~chisel3.iotesters.Driver(() => new Outer, "treadle") { c =>~)
+    ~chisel3.iotesters.Driver(() => new Outer, "treadle") { c =>~
+    Just don't bank your money on the correctness, it might fail in rare circumstances making debugging
+    a nightmare)
+

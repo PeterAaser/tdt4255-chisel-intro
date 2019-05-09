@@ -82,7 +82,7 @@ class EvilPrintfSpec extends FlatSpec with Matchers {
 
   it should "tell a lie and hurt you" in {
     wrapTester(
-      chisel3.iotesters.Driver(() => new CountTo3, "verilator") { c =>
+      chisel3.iotesters.Driver(() => new CountTo3) { c =>
         new CountTo3Test(c)
       } should be(true)
     )

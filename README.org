@@ -3,11 +3,11 @@ If you use it for your course, please let me know how it went and feel
 free (or even slightly pressured) to submit pull requests with improvements.
 
 In order to get started you should go through the introductory material:
-Introduction to hardware description languages: [[./hdl.org]]
+[[./hdl.org][Introduction to hardware description languages
+]][[./introduction.org][Introduction to hardware chisel]]
 
-Instructions can be found in oppgavetekst.org (read it in github if your preferred
-reader does not support .org markdown)
-
+The deliverable for this exercise is constructing a matrix multiplying unit.
+[[./exercise.org][Matrix multiplier exercise]]
 
 The main course(work) for creating a 5-stage RISCV pipeline can be found here
 https://github.com/PeterAaser/TDT4255_EX2

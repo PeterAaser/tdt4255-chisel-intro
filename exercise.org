@@ -3,6 +3,12 @@
   Matrix multiplication is fairly straight forward, however on hardware it's a little
   trickier than the standard for loops normally employed..
   
+  *Important*
+  You will be working with skeleton code. Every component you implement has a corresponding
+  skeleton source file found in [[./src/main/scala/][src/main/scala/]], so for Vector you're looking for
+  [[./src/main/scala/Vector.scala][src/main/scala/Vector.scala]]
+
+  
 ** Task 1 - Vector
    The first component you should implement is a register bank for storing a vector.
    
@@ -16,7 +22,7 @@
 ** Task 2 - Matrix
    The matrix works just like the vector only in two dimensions.
    The skeleton code and associated tests should make the purpose of this module obvious.
-   Run the tests with ~testOnly Ex0.VectorSpec~
+   Run the tests with ~testOnly Ex0.MatrixSpec~
    
 ** Task 3 - Dot Product
    This component differs from the two previous in that it has no explicit control input,
