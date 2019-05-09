@@ -33,12 +33,12 @@ class MatMul(val rowDimsA: Int, val colDimsA: Int) extends MultiIOModule {
   matrixA.dataIn      := 0.U
   matrixA.rowIdx      := 0.U
   matrixA.colIdx      := 0.U
-  matrixA.readEnable  := false.B
+  matrixA.writeEnable := false.B
 
   matrixB.rowIdx      := 0.U
   matrixB.colIdx      := 0.U
   matrixB.dataIn      := 0.U
-  matrixB.readEnable  := false.B
+  matrixB.writeEnable := false.B
 
   dotProdCalc.dataInA := 0.U
   dotProdCalc.dataInB := 0.U

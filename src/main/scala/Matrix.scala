@@ -9,12 +9,12 @@ class Matrix(val rowsDim: Int, val colsDim: Int) extends Module {
 
   val io = IO(
     new Bundle {
-      val colIdx     = Input(UInt(32.W))
-      val rowIdx     = Input(UInt(32.W))
-      val dataIn     = Input(UInt(32.W))
-      val readEnable = Input(Bool())
+      val colIdx      = Input(UInt(32.W))
+      val rowIdx      = Input(UInt(32.W))
+      val dataIn      = Input(UInt(32.W))
+      val writeEnable = Input(Bool())
 
-      val dataOut    = Output(UInt(32.W))
+      val dataOut     = Output(UInt(32.W))
     }
   )
 
@@ -28,8 +28,8 @@ class Matrix(val rowsDim: Int, val colsDim: Int) extends Module {
   // placeholders
   io.dataOut := 0.U
   for(ii <- 0 until rowsDim){
-    rows(ii).dataIn     := 0.U
-    rows(ii).readEnable := false.B
-    rows(ii).idx        := 0.U
+    rows(ii).dataIn      := 0.U
+    rows(ii).writeEnable := false.B
+    rows(ii).idx         := 0.U
   }
 }

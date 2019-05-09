@@ -24,7 +24,7 @@ class MatrixSpec extends FlatSpec with Matchers {
   }
 
 
-  it should "Retain its contents when readEnable is low" in {
+  it should "Retain its contents when writeEnable is low" in {
     wrapTester(
       chisel3.iotesters.Driver(() => new Matrix(10,10)) { c =>
         new UpdatesData(c)
@@ -41,7 +41,7 @@ object MatrixTests {
       List.fill(c.rowsDim)(scala.util.Random.nextInt(20) + 1)
     }
 
-    poke(c.io.readEnable, true)
+    poke(c.io.writeEnable, true)
     for(col <- 0 until c.colsDim){
       for(row <- 0 until c.rowsDim){
         poke(c.io.colIdx, col)
@@ -68,7 +68,7 @@ object MatrixTests {
       List.fill(c.rowsDim)(scala.util.Random.nextInt(20) + 1)
     }
 
-    poke(c.io.readEnable, true)
+    poke(c.io.writeEnable, true)
     for(col <- 0 until c.colsDim){
       for(row <- 0 until c.rowsDim){
         poke(c.io.colIdx, col)
@@ -78,7 +78,7 @@ object MatrixTests {
       }
     }
 
-    poke(c.io.readEnable, false)
+    poke(c.io.writeEnable, false)
 
     for(col <- 0 until c.colsDim){
       for(row <- 0 until c.rowsDim){

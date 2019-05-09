@@ -15,39 +15,38 @@ class VectorSpec extends FlatSpec with Matchers {
 
   behavior of "Vector"
 
-  it should "Not read data when read enable is false" in {
-    // FileUtils.getSvg("Adder")
+  it should "Not update its contents when write enable is false" in {
     wrapTester(
       chisel3.iotesters.Driver(() => new Vector(elements)) { c =>
-        new ReadEnable(c)
+        new WriteEnable(c)
       } should be(true)
     )
   }
 
-  // it should "Update its registers when read enable is true" in {
-  //   wrapTester(
-  //     chisel3.iotesters.Driver(() => new Vector(elements)) { c =>
-  //       new UpdatesData(c)
-  //     } should be(true)
-  //   )
-  // }
+  it should "Update its registers when write enable is true" in {
+    wrapTester(
+      chisel3.iotesters.Driver(() => new Vector(elements)) { c =>
+        new UpdatesData(c)
+      } should be(true)
+    )
+  }
 
-  // it should "Retain its data once read enable is set to false" in {
-  //   wrapTester(
-  //     chisel3.iotesters.Driver(() => new Vector(elements)) { c =>
-  //       new RetainsData(c)
-  //     } should be(true)
-  //   )
-  // }
+  it should "Retain its data once write enable is set to false" in {
+    wrapTester(
+      chisel3.iotesters.Driver(() => new Vector(elements)) { c =>
+        new RetainsData(c)
+      } should be(true)
+    )
+  }
 }
 
 
 object VectorTests {
   
-  class ReadEnable(c: Vector) extends PeekPokeTester(c)  {
+  class WriteEnable(c: Vector) extends PeekPokeTester(c)  {
 
     poke(c.io.dataIn, 123)
-    poke(c.io.readEnable, false)
+    poke(c.io.writeEnable, false)
 
     for(ii <- 0 until c.elements){
       poke(c.io.idx, ii)
@@ -66,7 +65,7 @@ object VectorTests {
 
   class UpdatesData(c: Vector) extends PeekPokeTester(c)  {
 
-    poke(c.io.readEnable, true)
+    poke(c.io.writeEnable, true)
 
     for(ii <- 0 until c.elements){
       poke(c.io.idx, ii)
@@ -84,7 +83,7 @@ object VectorTests {
 
   class RetainsData(c: Vector) extends PeekPokeTester(c)  {
 
-    poke(c.io.readEnable, true)
+    poke(c.io.writeEnable, true)
 
     for(ii <- 0 until c.elements){
       poke(c.io.idx, ii)
@@ -92,7 +91,7 @@ object VectorTests {
       step(1)
     }
 
-    poke(c.io.readEnable, false)
+    poke(c.io.writeEnable, false)
 
     for(ii <- 0 until c.elements){
       poke(c.io.idx, ii)
