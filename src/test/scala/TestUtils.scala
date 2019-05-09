@@ -45,11 +45,23 @@ object TestUtils {
   }
 
   abstract class PeekPokeTesterLogger[T <: MultiIOModule](dut: T) extends PeekPokeTester(dut){
-    def ioLoggers: List[chisel3.Bundle]
+
+    /**
+      * Defines which io ports should be recorded, and if they should be prefixed with a string.
+      * Prefixing with a string allows you to add rudimentary namespacing
+      */
+    def ioLoggers: List[(String, chisel3.Bundle)]
+
     import scala.collection.mutable._
     private val log = ArrayBuffer[LinkedHashMap[String, BigInt]]()
     override def step(n: Int): Unit = {
-      ioLoggers.foreach{ ioLogger => log.append(peek(ioLogger)) }
+      val entry = ioLoggers.map{ case (label, ioLogger) =>
+        val bundleValues = peek(ioLogger).toList
+          .map{ case(key, value) => (label + key, value) }
+          .toMap
+        bundleValues
+      }
+      log.append(entry.foldLeft(LinkedHashMap[String, BigInt]())(_ ++ _))
       super.step(n)
     }
     def getLog = log
@@ -106,11 +118,17 @@ object FileUtils {
     new File(getClass.getClassLoader.getResource(name).getPath)
   }
 
-  def getSvgDir: File =
-    new File(getClass.getClassLoader.getResource("svgs").getPath)
+  def getSvgDir: File = {
+    val f = new File(getClass.getClassLoader.getResource("svgs").getPath)
+    say(f)
+    f
+  }
 
-  def getAllSvgs: List[File] =
-    getListOfFilesRecursive(getSvgDir.getPath).filter( f => f.getPath.endsWith(".svg") )
+  def getAllSvgs: List[File] = {
+    val fs = getListOfFilesRecursive(getSvgDir.getPath).filter( f => f.getPath.endsWith(".svg") )
+    say(fs)
+    fs
+  }
 
 
   import scala.concurrent.ExecutionContext
@@ -121,8 +139,6 @@ object FileUtils {
 
   def writeSvg(source: String, cycle: Int): Pipe[IO,String,Unit] = {
     import sys.process._
-    say("pwd".!)
-    // val svgDir = getSvgDir.toPath.toString + s"/${source}Output"
     val svgDir = "pwd".!!.filter(_ >= ' ') + s"/svgOutput"
     (new File(svgDir)).mkdir()
     val svgDest = new File(svgDir + s"/$cycle.svg").toPath

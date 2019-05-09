@@ -353,7 +353,13 @@
    #+end_src
    
    Which can yield two different circuits depending on the opSel argument:
+   True:
    [[./Images/ScalaCond1.png]]
+   
+
+   
+
+   False:
    [[./Images/ScalaCond2.png]]
 
 
@@ -842,3 +848,9 @@
     Just don't bank your money on the correctness, it might fail in rare circumstances making debugging
     a nightmare)
 
+
+** Visualizing circuit state (Optional)
+   In order to make debugging easier it is helpful to render the state of the circuit to see where
+   errors happen.
+   A prototype for this is included in this project, read more about it here
+   [[./circuitRendering.org][Here]]

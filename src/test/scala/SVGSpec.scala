@@ -14,7 +14,6 @@ class SVGSpec extends FlatSpec with Matchers {
   behavior of "Adder"
 
   it should "Make some sweet pngs" in {
-    // FileUtils.getSvg("Adder")
     wrapTester(
       chisel3.iotesters.Driver(() => new Adder()) { c =>
         new AdderTester(c)
@@ -32,7 +31,7 @@ class Adder() extends Module {
   )
 
   val reg_a = RegInit(0.U(8.W))
-  reg_a := reg_a + 1.U
+  reg_a := reg_a + 2.U
 
   io.reg_a := reg_a
 }
@@ -40,7 +39,8 @@ class Adder() extends Module {
 object AdderTests {
   
   class AdderTester(c: Adder) extends PeekPokeTesterLogger(c)  {
-    override def ioLoggers = List(c.io)
+    //                                ^^^^^^^^^^^^^^^^^^^^^^^ This is an extension of the regular peek poke tester
+    override def ioLoggers = List("" -> c.io)
 
     for(ii <- 0 until 10){
       step(1)
@@ -49,3 +49,5 @@ object AdderTests {
     writeLog
   }
 }
+
+
