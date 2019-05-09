@@ -355,10 +355,10 @@
    Which can yield two different circuits depending on the opSel argument:
    True:
    [[./Images/ScalaCond1.png]]
-   
-
-   
-
+   .
+   .
+   .
+   .
    False:
    [[./Images/ScalaCond2.png]]
 
