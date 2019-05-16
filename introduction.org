@@ -113,7 +113,7 @@
      combinatorial.
 
 ** Your first component
-   The code for the snippets in this subchapter can be found in Example.scala in the test directory.
+   The code for the snippets in this subchapter can be found in the directory src/test/scala/Examples/.
    You can run them using sbt by running ./sbt in your project root which will open
    your sbt console.
 

@@ -100,33 +100,33 @@
    it does not face any restrictions in order to use chisel.
    
    In order to go from scala to a chisel graph builder the program must first be compiled, which
-   exposes invalid programs (for instance typos, usage befor declaration and similar)
+   exposes invalid programs (for instance typos, usage before declaration and similar)
    
 ** Chisel Graph Builder -> Chisel Graph
    After compiling the program can now be run.
    There are three common outcomes from the builder:
 
-   + The builder discovers an invalid circuit
-     This is analogous to a HTML tag missing
+   + The builder discovers an invalid circuit.
+     This is analogous to a HTML tag missing.
 
-   + A wire is unconnected
+   + A wire is unconnected.
      During building the builder discovered that a wire was not connected.
-     This is impossible to determine during compile time (unless you solve the halting problem)
-     thus it is only detected during building of the circuit.
+     This is impossible to determine during compile time (unless you solve the halting problem).
+     Thus, it is only detected during building of the circuit.
 
-   + The circuit is well formed and can be instantiated.
+   + The circuit is well-formed and can be instantiated.
    
 ** Chisel Graph -> Simulator
    After the circuit is verified it can now be used by a simulator.
    Several simulators are available and have different advantages and disadvantages.
-   If nothing else is specified the backend used is FIRRTL
+   If nothing else is specified, the backend used is FIRRTL.
    
    The simulator allows us to test how our circuit will react as its inputs are changed,
    allowing us to verify the correctness of our designs.
 
-   This is *HUGE* in HDL land as this guarantee does not hold for many HDLs (VHDL and verilog)!
-   In the days of yore it was very common to see circuits being well behaved in the simulator
-   and misbehaving on an FPGA, but this is not the case with chisel.
+   This is *HUGE* in HDL land as this guarantee does not hold for many HDLs (including VHDL and Verilog)!
+   In the days of yore it was very common to see circuits being well-behaved in the simulator
+   and misbehaving on an FPGA, but this is not the case with Chisel.
    The reason for this is that chisel adopts a fully synchronous model, but it is sufficient that
    you know that chisel won't lie to you like VHDL would.
  
