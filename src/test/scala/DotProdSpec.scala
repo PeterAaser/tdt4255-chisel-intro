@@ -8,7 +8,8 @@ import TestUtils._
 class DotProdSpec extends FlatSpec with Matchers {
   import DotProdTests._
 
-  val elements = scala.util.Random.nextInt(5) + 2
+  val rand = new scala.util.Random(100)
+  val elements = 7
 
   behavior of "DotProd"
 
@@ -41,6 +42,8 @@ class DotProdSpec extends FlatSpec with Matchers {
 
 object DotProdTests {
 
+  val rand = new scala.util.Random(100)
+
   class SignalsWhenDone(c: DotProd) extends PeekPokeTester(c) {
 
     for(ii <- 0 until c.elements - 1){
@@ -61,8 +64,11 @@ object DotProdTests {
 
   class CalculatesCorrectResult(c: DotProd) extends PeekPokeTester(c) {
 
-    val inputsA = List.fill(c.elements)(scala.util.Random.nextInt(10))
-    val inputsB = List.fill(c.elements)(scala.util.Random.nextInt(10))
+    val inputsA = List.fill(c.elements)(rand.nextInt(10))
+    val inputsB = List.fill(c.elements)(rand.nextInt(10))
+    println("runnign dot prod calc with inputs:")
+    println(inputsA.mkString("[", "] [", "]"))
+    println(inputsB.mkString("[", "] [", "]"))
     val expectedOutput = (for ((a, b) <- inputsA zip inputsB) yield a * b) sum
 
     for(ii <- 0 until c.elements){
@@ -77,8 +83,11 @@ object DotProdTests {
 
   class CalculatesCorrectResultAndSignals(c: DotProd) extends PeekPokeTester(c) {
 
-    val inputsA = List.fill(c.elements)(scala.util.Random.nextInt(10))
-    val inputsB = List.fill(c.elements)(scala.util.Random.nextInt(10))
+    val inputsA = List.fill(c.elements)(rand.nextInt(10))
+    val inputsB = List.fill(c.elements)(rand.nextInt(10))
+    println("runnign dot prod calc with inputs:")
+    println(inputsA.mkString("[", "] [", "]"))
+    println(inputsB.mkString("[", "] [", "]"))
     val expectedOutput = (for ((a, b) <- inputsA zip inputsB) yield a * b) sum
 
     for(ii <- 0 until c.elements){

@@ -40,19 +40,59 @@
    case class DotProdCalculator(vectorLen: Int, timeStep: Int, accumulator: Int){
      def update(inputA: Int, inputB: Int): (Int, Boolean, DotProdCalculator) = {
        val product = inputA * inputB
-       if(((timeStep + 1) % vectorLen) == 0){
+       if(((timeStep + 1) % vectorLen) == 0)
          (accumulator + product, true, this.copy(timeStep = 0, accumulator = 0))
        else
          (accumulator + product, false, this.copy(timeStep = this.timeStep + 1, accumulator = accumulator + product))
-       }
      }
    }
    #+end_src
 
-   To see it in action run ~testOnly Ex0.DPCsimulatorSpec~ in your sbt console.
+   To see it in action run ~testOnly Examples.SoftwareDotProdSpec~ in your sbt console.
    
    As with the previous tasks, the dot product calculator must pass the tests with
    ~testOnly Ex0.DotProdSpec~
+   
+*** Timing
+    As shown in the timing diagram below, the dot product calculator should deliver the result as
+    soon as possible.
+    This means you will have to drive the output with the sum of the accumulator and the product of
+    the two inputs.
+    If you choose to drive the output only by the value of the accumulator your circuit will
+    lag behind by one cycle, which while good for pipelining purposes is not good for passing the test
+    purposes.
+    #+CAPTION: The expected output of the dot product calculator
+    [[./Images/counter.png]]
+
+
+*** Chisel counters and a short detour on scala documentation
+    Doing an action for a set amount of timesteps is a very common task in hardware design, so this
+    functionality is included in chisel via the Counter class.
+    In order to understand how this counter works you can google "chisel counter" and get the following
+    https://chisel.eecs.berkeley.edu/api/3.0.1/chisel3/util/Counter.html as first result.
+    However, this is for the counter Class, what you actually want is the counter Object: 
+    https://chisel.eecs.berkeley.edu/api/3.0.1/chisel3/util/Counter$.html
+    
+    This can be very confusing when new to scala, but it is simply convention:
+    When a class and an object share name this is just a convenience for keeping static methods, such
+    as constructors, separated from the non-static methods.
+
+    In the Counter object (the second link) there is an apply method:
+    #+begin_src scala
+      def apply(cond: Bool, n: Int): (UInt, Bool)
+    #+end_src
+    The type signature tells you that the input is a regular scala integer, and a chisel boolean
+    (scala booleans are of type ~Boolean~, rather than ~Bool~) and the output is a UInt and a chisel
+    boolean.
+    This means that upon instantiating a Counter with its apply method you only get the outputs from
+    the counter, not the object itself.
+    The result is a convenient method of making a counter, simply supply how many ticks it takes for the
+    counter to roll over, as well as an input signal for enabling the clock, and receive a tuple with the
+    signal for the counters value, as well as a boolean signal that toggles whenever the clock rolls over.
+
+    A special property of apply methods are that they can be called directly on the object.
+    ~Counter.apply(cCond, 10)~ does the same as ~Counter(cCond, 10)~.
+    To call the class constructor, use the ~new~ keyword.
 
 
 ** Task 4 - Matrix Matrix multiplication
@@ -106,9 +146,43 @@
    
    The skeleton code for the matrix multiplier is less detailed, with only one test.
    You're encouraged to write your own tests to make this easier.
-   Additionally, if you feel like you're getting stuck you can take a look at 
-   MatMulTips.org
        
+*** Structuring your circuit
+    It is very easy to get bogged down with details in this exercise, so it's useful to take
+    a few moments to plan ahead.
+    
+    A natural way to break down the task is to split it into two phases: setup and execution.
+    For setup you simply want to shuffle data from the input signals to your two matrix modules.
+    
+    The next task is to actually perform the calculation.
+    This is a little more complex, seeing as the read patterns are different from matrix A and B.
+
+    To make this simpler a good idea is to introduce a control module. 
+    This module should keep track of which state the multiplier is in, setup or execution, and
+    provide the appropriate row and column select signals.
+    
+    You may also choose to split the control module into an init controller and an execution
+    controller if you see fit.
+
+    A suggested design is shown underneath:
+    [[./Images/MatMul.png]]
+    
+*** Timing
+    The timing for your matrix multiplier is straight forward. For a 3x4 matrix it takes
+    12 cycles to input data (cycles 0 to 11), and execution should proceed on cycle 12.
+    While you can technically start execution sooner than this the tests expect you to
+    not start executing before all data is loaded.
+    As long as you start executing just as data has been loaded your dot prod design will 
+    take care of the rest.
+    
+*** Testing
+    In order to make testing easier, consider testing your row and column select signals
+    first.
+    The actual values stored in the matrixes are just noise, the important part is that
+    you select the correct rows and columns at the correct times for the correct matrixes,
+    and if you do this the rest is comparatively easy.
+    
+
 ** Bonus exercise - Introspection on code quality and design choices
    This last exercise has no deliverable, but you should spend some time thinking about
    where you spent most of your efforts.

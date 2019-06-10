@@ -49,3 +49,14 @@
    bi-directional busses. Otherwise, the value is simply outputted and
    the module receiving the output simply ignores it if it didn’t ask
    for anything.
+   
+* Jahre comments
+** DONE Block diagrams
+** DONE Specify timing constraints
+*** DONE For dot prod
+*** DONE -ish For mat mul
+** DONE Make dot prod sim easier to find
+   It was gone. Oops
+** DONE Direct link to chisel docs
+** DONE Modularize MatMul
+** DONE Unrandomize tests

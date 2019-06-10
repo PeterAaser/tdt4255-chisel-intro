@@ -6,7 +6,7 @@
   drawing programs.
   
   As an example we will use a very simple circuit:
-  [[./Images/inkscape.jpg]]
+  [[./Images/inkscape.png]]
   
   This circuit has a register, and we want to see how its state evolves, thus we add a label.
   The name of the register is "Reg_A", which will be replaced by the actual value as the circuit
@@ -82,7 +82,7 @@
 
 ** Draw the circuit in inkscape
    You can add as much detail as you want here, the only thing the parser looks for is
-   text fields that are postfixed with "_field"
+   text fields that are postfixed with "_field".
    The fields I would be interested in are the row and column counters, and the dot product
    accumulator state.
    Save the svg as 

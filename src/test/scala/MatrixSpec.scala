@@ -12,12 +12,22 @@ class MatrixSpec extends FlatSpec with Matchers {
 
   behavior of "Matrix"
 
-  val rowDims = scala.util.Random.nextInt(5) + 3
-  val colDims = scala.util.Random.nextInt(5) + 3
+  val rand = new scala.util.Random(100)
+  val rowDims = 5
+  val colDims = 3
 
-  it should "Update its contents" in {
+  it should "Update its contents with a square shape" in {
     wrapTester(
-      chisel3.iotesters.Driver(() => new Matrix(10,10)) { c =>
+      chisel3.iotesters.Driver(() => new Matrix(rowDims,rowDims)) { c =>
+        new UpdatesData(c)
+      } should be(true)
+    )
+  }
+
+
+  it should "Update its contents with a rectangular shape" in {
+    wrapTester(
+      chisel3.iotesters.Driver(() => new Matrix(rowDims,colDims)) { c =>
         new UpdatesData(c)
       } should be(true)
     )
@@ -26,7 +36,7 @@ class MatrixSpec extends FlatSpec with Matchers {
 
   it should "Retain its contents when writeEnable is low" in {
     wrapTester(
-      chisel3.iotesters.Driver(() => new Matrix(10,10)) { c =>
+      chisel3.iotesters.Driver(() => new Matrix(rowDims, colDims)) { c =>
         new UpdatesData(c)
       } should be(true)
     )
@@ -35,10 +45,12 @@ class MatrixSpec extends FlatSpec with Matchers {
 
 object MatrixTests {
 
+  val rand = new scala.util.Random(100)
+
   class UpdatesData(c: Matrix) extends PeekPokeTester(c) {
 
     val inputs = List.fill(c.colsDim){
-      List.fill(c.rowsDim)(scala.util.Random.nextInt(20) + 1)
+      List.fill(c.rowsDim)(rand.nextInt(20) + 1)
     }
 
     poke(c.io.writeEnable, true)
@@ -65,7 +77,7 @@ object MatrixTests {
   class RetainsData(c: Matrix) extends PeekPokeTester(c) {
 
     val inputs = List.fill(c.colsDim){
-      List.fill(c.rowsDim)(scala.util.Random.nextInt(20) + 1)
+      List.fill(c.rowsDim)(rand.nextInt(20) + 1)
     }
 
     poke(c.io.writeEnable, true)

@@ -8,8 +8,8 @@ import TestUtils._
 class MatMulSpec extends FlatSpec with Matchers {
   import MatMulTests._
 
-  val rowDims = scala.util.Random.nextInt(5) + 3
-  val colDims = scala.util.Random.nextInt(5) + 3
+  val rowDims = 3
+  val colDims = 7
 
 
   behavior of "MatMul"
@@ -24,6 +24,8 @@ class MatMulSpec extends FlatSpec with Matchers {
 }
 
 object MatMulTests {
+
+  val rand = new scala.util.Random(100)
 
   class TestExample(c: MatMul) extends PeekPokeTester(c) {
     val mA = genMatrix(c.rowDimsA, c.colDimsA)

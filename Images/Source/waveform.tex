@@ -1,0 +1,51 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{tikz-timing}
+\usetikztiminglibrary[rising arrows]{clockarrows}
+\usepackage{xparse} % NewDocumentCommand, IfValueTF, IFBooleanTF
+
+% Reference a bus.
+%
+% Usage:
+%
+%     \busref[3::0]{C/BE}    ->   C/BE[3::0]
+%     \busref*{AD}           ->   AD#
+%     \busref*[3::0]{C/BE}   ->   C/BE[3::0]#
+%
+\NewDocumentCommand{\busref}{som}{\texttt{%
+#3%
+\IfValueTF{#2}{[#2]}{}%
+\IfBooleanTF{#1}{\#}{}%
+}}
+
+\title{Waveform drawing}
+\author{peteraa }
+\date{June 2019}
+
+\begin{document}
+
+\begin{tikztimingtable}[%
+    timing/dslope=0.1,
+    timing/.style={x=5ex,y=2ex},
+    x=5ex,
+    timing/rowdist=3ex,
+    timing/name/.style={font=\sffamily\scriptsize}
+]
+\busref{CLK}         & 32{c} \\
+\busref{A}           & 1D{5} 1D{0} 1D{4} 1D{8} 1D{1} 1D{6} 1D{6} 1D{2} 1D{9} 1D{0} 1D{8} 1D{3} 1D{9} 1D{3} 2U \\
+\busref{B}           & 1D{8} 1D{3} 1D{3} 1D{2} 1D{7} 1D{6} 1D{7} 1D{8} 1D{5} 1D{2} 1D{7} 1D{1} 1D{8} 1D{2} 2U \\
+\busref{VALID}       & 6U 1H 6U 1H 2U\\
+\busref{Output}      & 1D{40} 1D{40} 1D{52} 1D{68} 1D{75} 1D{111} 1D{153} 1D{16} 1D{61} 1D{61} 1D{117} 1D{120} 1D{192} 1D{198} 2U\\
+\extracode
+\begin{pgfonlayer}{background}
+\begin{scope}[semitransparent ,semithick]
+\vertlines[darkgray,dotted]{0.5,1.5 ,...,8.0}
+\end{scope}
+\end{pgfonlayer}
+\end{tikztimingtable}
+
+\maketitle
+
+\section{Introduction}
+
+\end{document}

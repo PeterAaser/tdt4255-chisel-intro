@@ -852,9 +852,18 @@
     Just don't bank your money on the correctness, it might fail in rare circumstances making debugging
     a nightmare)
 
+** Visualizing generated circuits
+   While limited, it is possible to visualize your generated circuit using [[https://github.com/freechipsproject/diagrammer][diagrammer]].
+   The necessary code to generate .fir file is in the main.scala file, just comment it out to generate
+   these.
+   I encourage you to give it a fair shake to see if you find it useful or not.
 
 ** Visualizing circuit state (Optional)
    In order to make debugging easier it is helpful to render the state of the circuit to see where
    errors happen.
    A prototype for this is included in this project, read more about it here
    [[./circuitRendering.org][Here]]
+
+** Resources
+   Chisel cheat sheet
+   https://chisel.eecs.berkeley.edu/doc/chisel-cheatsheet3.pdf

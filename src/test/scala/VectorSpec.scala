@@ -11,7 +11,7 @@ import scala.collection.immutable.{ Vector => _ }
 class VectorSpec extends FlatSpec with Matchers {
   import VectorTests._
 
-  val elements = scala.util.Random.nextInt(5) + 2
+  val elements = 7
 
   behavior of "Vector"
 

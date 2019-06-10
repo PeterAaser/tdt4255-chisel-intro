@@ -7,8 +7,10 @@ import org.scalatest.{Matchers, FlatSpec}
 
 object TestUtils {
 
+  val rand = new scala.util.Random(100)
+
   def genMatrix(rows: Int, cols: Int) = List.fill(rows)(
-    List.fill(cols)(scala.util.Random.nextInt(5))
+    List.fill(cols)(rand.nextInt(5))
   )
 
   def printVector(v: List[Int]): String =
@@ -36,6 +38,30 @@ object TestUtils {
         println(e.getMessage)
         println("")
         println("")
+        println("##########################################################")
+        println("##########################################################")
+        println("##########################################################")
+      }
+      case e: chisel3.core.Binding.ExpectedHardwareException => {
+        println("##########################################################")
+        println("##########################################################")
+        println("##########################################################")
+        println("Your design is using raw chisel types!")
+        println("error:\n")
+        println(e.getMessage)
+        println("")
+        println("")
+        println("This typically occurs when you forget to wrap a module")
+        println("e.g")
+        println("""
+class MyBundle extends Bundle {
+  val signal = UInt(32.W)
+}
+val mySignal = new MyBundle        
+               ^^^^ Wrong!
+should be
+val mySignal = Wire(new MyBundle)
+""")
         println("##########################################################")
         println("##########################################################")
         println("##########################################################")

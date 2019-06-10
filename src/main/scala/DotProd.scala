@@ -21,6 +21,8 @@ class DotProd(val elements: Int) extends Module {
     */
   val counter = Counter(elements)
   val accumulator = RegInit(UInt(32.W), 0.U)
+
+  // Please don't manually implement product!
   val product = io.dataInA * io.dataInB
 
   // placeholder
