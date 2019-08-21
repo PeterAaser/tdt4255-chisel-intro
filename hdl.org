@@ -1,3 +1,5 @@
+#+LATEX_HEADER: \usepackage{minted}
+
 * Hardware description languages
   Hardware description languages, HDLs for short, are used to model circuits, typically digital.
   HDLs are *declarative* languages, they describe how the circuit should be constructed.
@@ -20,7 +22,8 @@
   Instead of describing how text should be rendered HDLs describe how wires and components in a 
   circuit should be connected.
   Although we have yet to introduce chisel, let's look at some code for a chisel circuit:
-  It is not necessary to understand what is going on in this code to continue.
+  It is not necessary to understand what is going on in this code to continue. The following code generates
+  the circuit shown in figure [[fig:counter]].
   #+begin_src scala
   class SimpleCounter() extends Module {
     val io = IO(
@@ -36,7 +39,9 @@
   }
   #+end_src
   Just like the HTML describes a document the chisel code describes a simple circuit shown below:
-  #+CAPTION: This is the caption for the next figure link (or table)
+  #+NAME:fig:counter
+  #+ATTR_LaTeX: :height 10cm :placement [H]
+  #+CAPTION:Simple adder circuit generated using the chisel code on the previous page.
   [[./Images/counter.png]]
 
 
@@ -47,8 +52,10 @@
 
   While the path from HTML -> Browser is fairly short it's a lot more involved for hardware description!
   This shouldn't come as a suprise, displaying text is less complex than creating digital circuits.
-  A very simplified version of this is shown here:
-  #+CAPTION: Placeholder graphic
+  A very simplified version of this is shown in figure [[fig:flow]].
+  #+NAME:fig:flow
+  #+CAPTION: Flow using HDL.
+  #+ATTR_LaTeX: :height 5cm :placement [H]
   [[./Images/toolchain1.png]]
  
 
@@ -90,10 +97,11 @@
   "html program", but nonetheless we will refer to a scala program building chisel as chisel programs.
   
   We expand upon our first toolchain description:
-  #+CAPTION: Placeholder graphic
+  #+NAME:fig:chisel_flow
+  #+CAPTION:Toolchain flow using chisel.
   [[./Images/toolchain2.png]]
 
-
+  
 ** Scala -> Chisel Graph Builder
    The starting point, a scala program describing how to build a chisel graph.
    This program is not constrained in any way, it's able to do anything any other scala program does,
