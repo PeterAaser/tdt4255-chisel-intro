@@ -1,3 +1,4 @@
+#+LATEX_HEADER: \usepackage{minted}
 * Writing chisel
 ** Prerequisites
    + *You should have some idea of how digital logic circuits work.*
@@ -247,7 +248,7 @@
     using testOnly <TAB>
     
     Running the test should look something like this.
-    #+begin_src
+    #+begin_src text
     sbt:chisel-module-template> testOnly Examples.MyIncrementTest
     Run starting. Expected test count is: 0
     ...
@@ -355,7 +356,7 @@
    Which can yield two different circuits depending on the opSel argument:
    True:
    [[./Images/ScalaCond1.png]]
-   #+begin_src
+   #+begin_src text
    .
    .
    .
@@ -591,13 +592,13 @@
     }
     #+end_src
     
-    #+begin_src
+    #+begin_src text
     sbt:chisel-module-template> compile:test
     ...
     #+end_src
     As promised, this code compiles, but when you run the test which actually builds a simulator you
     get the following:
-    #+begin_src
+    #+begin_src text
     [success] Total time: 3 s, completed Apr 25, 2019 3:15:15 PM
     ...
     sbt:chisel-module-template> testOnly Examples.InvalidSpec
@@ -617,7 +618,7 @@
     #+end_src
     
     While scary, the actual error is only this line:
-    #+begin_src
+    #+begin_src text
     firrtl.passes.CheckInitialization$RefNotInitializedException: @[Example.scala 25:21:@20.4] : [module Invalid]  Reference myVec is not fully initialized.
      : myVec.io.idx <= VOID
     #+end_src
@@ -693,7 +694,7 @@
    In order to make it extra clear the Driver has the optional "verbose" parameter set to true.
    This yields the following:
    
-   #+begin_src
+   #+begin_src text
    DelaySpec:
    SimpleDelay
    ...
@@ -819,7 +820,7 @@
     
     As it turns out printf can be rather misleading when using stateful circuits.
     To see this in action, try running ~testOnly Examples.EvilPrintfSpec~ which yields the following
-    #+begin_src
+    #+begin_src text
     In cycle 0 the output of counter is: 0
     according to printf output is: 0
     [info] [0.003] 
