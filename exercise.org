@@ -1,3 +1,4 @@
+#+LATEX_HEADER: \usepackage{minted}
 * Matrix matrix multiplication
   For your first foray into chisel you will design a matrix matrix multiplication unit.
   Matrix multiplication is fairly straight forward, however on hardware it's a little
@@ -14,7 +15,7 @@
    
    In Vector.scala you will find the skeleton code for this component.
    Unlike the standard Chisel.Vec our custom vector has a read enable which means that
-   the memory pointed to by idx will only be overWritten when readEnable is true.
+   the memory pointed to by idx will only be overWritten when writeEnable is true.
 
    Implement the vector and test that it works by running
    ~testOnly Ex0.VectorSpec~ in your sbt console.
@@ -62,7 +63,7 @@
     lag behind by one cycle, which while good for pipelining purposes is not good for passing the test
     purposes.
     #+CAPTION: The expected output of the dot product calculator
-    [[./Images/counter.png]]
+    [[./Images/DotProd.png]]
 
 
 *** Chisel counters and a short detour on scala documentation
@@ -102,7 +103,7 @@
    When performing matrix multiplication on a computer transposing the second matrix
    can help us reduce complexity by quite a lot. To examplify, consider 
       
-   #+begin_src
+   #+begin_src text
        | 2,  5 |
    A = | 7, -1 |
        | 0,  4 |
@@ -115,7 +116,7 @@
    It would be much simpler to just have two modules with the same dimensions, and we
    can do this by transposing B so we get
        
-   #+begin_src
+   #+begin_src text
         | 2,  5 |
    A  = | 7, -1 |
         | 0,  4 |
@@ -127,7 +128,7 @@
    
    Now we need to do is calculate the dot products for the final matrix:
 
-   #+begin_src
+   #+begin_src text
    if A*B = C then
 
         |  A[0] × BT[0],   A[0] × BT[1],   A[0] × BT[2] |
@@ -142,7 +143,7 @@
    #+end_src
    
    Because of this, the input for matrix B will be supplied transposed, thus you do not
-   have to worry about this. For B the input would be [1, 0, 1, 4, 2, 0]
+   have to worry about this. For B the input would be [1, 0, 1, 4, 2, 0].
    
    The skeleton code for the matrix multiplier is less detailed, with only one test.
    You're encouraged to write your own tests to make this easier.
@@ -189,3 +190,7 @@
 
    A common saying is "A few hours of work can save you from several minutes of planning", 
    and this holds especially true for writing chisel!!
+
+
+
+
