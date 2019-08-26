@@ -124,7 +124,7 @@
         | 1,  0 |
    BT = | 1,  4 |
         | 2,  0 |
-   #+end_src text
+   #+end_src
    
    Now we need to do is calculate the dot products for the final matrix:
 
