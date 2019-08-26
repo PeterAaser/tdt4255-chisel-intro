@@ -63,7 +63,7 @@
     lag behind by one cycle, which while good for pipelining purposes is not good for passing the test
     purposes.
     #+CAPTION: The expected output of the dot product calculator
-    [[./Images/counter.png]]
+    [[./Images/DotProd.png]]
 
 
 *** Chisel counters and a short detour on scala documentation
