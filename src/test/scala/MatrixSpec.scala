@@ -37,7 +37,7 @@ class MatrixSpec extends FlatSpec with Matchers {
   it should "Retain its contents when writeEnable is low" in {
     wrapTester(
       chisel3.iotesters.Driver(() => new Matrix(rowDims, colDims)) { c =>
-        new UpdatesData(c)
+        new RetainsData(c)
       } should be(true)
     )
   }
