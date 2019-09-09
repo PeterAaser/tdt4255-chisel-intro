@@ -21,6 +21,9 @@
    
 ** Task 2 - Matrix
    The matrix works just like the vector only in two dimensions.
+   In the skeleton code a row of the vectors you have created in task 1 has been instantiated:
+   ~val rows = Vec.fill(rowsDim)(Module(new Vector(colsDim)).io)~
+   
    The skeleton code and associated tests should make the purpose of this module obvious.
    Run the tests with ~testOnly Ex0.MatrixSpec~
    
