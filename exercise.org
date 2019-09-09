@@ -9,6 +9,14 @@
   skeleton source file found in [[./src/main/scala/][src/main/scala/]], so for Vector you're looking for
   [[./src/main/scala/Vector.scala][src/main/scala/Vector.scala]]
 
+  *Important*
+  When you are done, use the provided ./deliver.sh script to pack up the archive.
+  If you're unable to run bash scripts then please ensure that you deliver a *zip* archive.
+  Not .rar or anything else, just use zip because my grading script knows how to handle that
+  in addition to the one used by deliver.sh
+  named after your username. Nothing more, nothing less, just your username.
+  This archive should be runnable as is, thus you need to include all the necessary files.
+  (I may or may not diff the tests to check if you're screwing with them)
   
 ** Task 1 - Vector
    The first component you should implement is a register bank for storing a vector.
