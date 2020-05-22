@@ -4,19 +4,25 @@
    + *You should have some idea of how digital logic circuits work.*
 
      You should have a basic overview on digital circuits.
-     It is assumed that you know what a multiplexer is and how it works, and 
-     how a register works.
+     It is assumed that you know what a multiplexer is and how it works (on a logical level), 
+     and likewise for how register works. 
+     These are basic concepts you can read about on wikipedia.
 
-   + *You must be able to run scala programs.*
+   + *You must be able to run java programs.*
 
-     If you can run java then you can run scala.
-     If not grab the jvm. Remember to curse Larry Page if you pick it up from the
-     oracle webpage.
+     If you can run java then you can run scala since they both target the java virtual machine (jvm).
+     To check if your machine has some flavor of the jvm installed simply type "java" in your terminal.
+     If you do not have it installed you can find instructions [[https://openjdk.java.net/install/][here]], or simply just run
+     ~sudo apt-get install openjdk-8-jre~
+     Fortunately, this is the only dependency you need, everything else is bootstrapped by the
+     coursework framework.
 
    + *Some flavor of GNU/Linux, or at least something UNIX-like.*
 
      If you use anything other than Ubuntu 16.04 or 18.04 I won't be able to offer
      help if something goes wrong.
+     If you use Windows, the Windows Linux Subsystem is also fully capable of running
+     chisel, and does not have any known compatibility issues with this framework.
      Running chisel on OSX is probably possible, but you'll have to figure it out yourself.
 
    + *An editor suited for scala.*
@@ -30,6 +36,7 @@
      This course is hard enough as it is, no point making it harder by neglecting basic IDE
      functionality. There are plenty of good options, no matter if you're a vim user or prefer
      GUI based full fledged IDEs.
+     Please please please don't use 15 instances of gedit.
 
    + *Optional: sbt*
 
@@ -41,6 +48,9 @@
 
 ** Terms
    Before delving into code it's necessary to define some terms.
+   In the next section you will start writing some code that will use these
+   concepts, so you if you are unsure what these terms actually mean you can
+   get a practical introduction which should clarify things.
    
    + *Wire*
 
@@ -79,41 +89,179 @@
      
      Physically it *is* possible to have multiple drivers, but it's not a good idea
      as attempting to drive a wire with 0 and 1 simultaneously causes a short circuit
-     which is definitely not a good thing.
+     at which point the behavior of the circuit is no longer well defined, but dependant
+     on the underlying hardware, which even risks permanent damage, and is therefore not
+     something your tools will even allow you to do.
      
    + *Module*
 
      In order to make development easier we separate functionality into modules, 
      defined by its inputs and outputs.
+     Further in modules will be visualized as boxes with wires going in and out,
+     sometimes with their contents shown depending on whether the contents are relevant.
+     Every module is a circuit, and just like a circuit can be seen as a collection of
+     subcircuits so can a module contain many submodules.
  
    + *Combinatory circuit*
 
-     A combinatory circuit is a circuit whose output is based only on its
-     inputs.
+     A combinatory circuit is a circuit whose output is based only on its inputs.
+     Even if a circuit is not combinatorial it often has modules that are fully combinatorial.
+     Combinatorial circuits work independently of the clock.
+   
+   + *Clock*
      
+     The clock is a special signal responsible for deciding the speed at which
+     a circuit operates.
+     The faster the clock ticks, the faster a circuit will operate, however if
+     the clock ticks too fast the circuit will start misbehaving since it is unable
+     to reach a stable state before the next tick happens.
+     When writing chisel the clock signal is always implicitly there, which means
+     you do not need to care about it on a practical level, however you should by
+     the end of this exercise have a better understanding of how circuit design and 
+     clock speed interacts.
+     The time between two clock ticks are known as a *cycle*.
+     
+   + *Register*
+
+     A register works similarly to a wire, however its value is only updated when
+     the clock ticks.
+     Unlike wires clocks can have circular dependencies like this:
+     #+begin_src scala
+     val regA = RegInit(2.U(4.W))
+     val regB = RegInit(1.U(4.W))
+     regA := regB
+     regB := regA
+     #+end_src
+     In this circuit the two registers will swap value every time the clock ticks.
+
    + *Stateful circuit*
 
      A circuit that will give different results based on its internal state.
-     In common parlance, a circuit without registers (or memory) is combinatory
-     while a circuit with registers is stateful.
-
-   + *Clock*
-     
-     The clock is omnipresent in chisel, which paradoxically leads to it being nearly invisible.
-     Every register in chisel is automatically wired up to the clock signal, and it may only update
-     its contents when the clock ticks.
-     Typically the term *cycle* is used to describe a single clock tick.
+     In order to have internal state, a circuit needs to have some form of memory,
+     which for all intents and purposes means that if there are registers in a circuit
+     it is stateful.
+     Consider the circuit with the registers defined above:
+     At odd cycles the value of regA will be 1 and on even 2, thus its outputs are not
+     solely dependent on its input (in fact it has no inputs!)
  
    + *Chisel Graph*
 
      A chisel program is a program whose result is a graph which can be synthesized
      to a transistor level schematic of a logic circuit.
-     When connecting wires wireA and wireB we were actually manipulating a graph
-     (actually, two subgraphs that were eventually combined into one).
-     The chisel graph is directed, but it does allow cycles so long as they are not
-     combinatorial.
+     When connecting wires wireA and wireB when discussing driving, we were actually 
+     manipulating a graph.
 
+** Playing around with chisel
+   Let's start actually writing some chisel!
+   First, you need to start the project up, this will conveniently download the necessary tools 
+   to work with scala, such as the compiler and the build tool (sbt).
+   From a GNU/Linux terminal, enter the directory you cloned this project to:
+   
+   #+begin_src
+   you@yourMachine:~$  cd ~/path/to/coursework/tdt4255-chisel-intro
+   you@yourMachine:~$  ./sbt.sh
+   
+   ...
+   ...
+
+
+   --- A lot of waiting and scrolling text ---
+
+   ...
+   ...
+
+   sbt:chisel intro> 
+   sbt:chisel intro> testOnly Examples.firstChisel
+   
+   --- Lots of waiting ---
+   #+end_src
+   
+   After a long while this will run your first test in chisel!
+   As you can see from the output not much happened, but you should pay attention
+   to the print statements, giving you an idea of how the control flow for the tests
+   work.
+   
+   Now, open the file for the test you just ran, which is located in 
+   ~/user/home/path/to/exercise/src/test/scala/Examples/firstTest.scala~
+   Take some time to parse what is going on here, use the print statements to guide you.
+   The commented out code is there to show what you should end up with after this section,
+   so try to not look too much at it unless your results deviate from what is described.
+   
+   In its body, the class ~FirstTest~ defines two classes which are the essential parts of the test,
+   These are ~MyModule~ which describes a digital circuit, and ~TestRunner~ which describes
+   a set of operations to inspect and change the state of the circuit defined by ~MyModule~.
+   Lastly, the body of ~FirstTest~ synthesizes an instance of ~MyModule~ which is then subjected
+   to the testing procedure defined in ~TestRunner~, however this part is not important to you.
+   It should be noted that because ~FirstTest~ extends ~FlatSpec with Matchers~ from the scalatest 
+   framework, the class body has access to special syntax such as ~behavior of "my first module"~, 
+   which means this is _not_ normal scala syntax that you have to understand.
+   First we will look at the module, ~MyModule~
+   
+   
 ** Your first component
+   Just like the ~FirstTest~ class obtain special syntax from extending the test
+   framework, by extending ~chisel3.Module~ the class ~MyModule~ can now be
+   synthesized into a circuit component, so long as it defines an io port. In
+   this class, the special value ~io~ defines which inputs and outputs your
+   module has (and of what shape), while the rest of the class defines how the input is connected to
+   the output by executing the statements in the main body. 
+   Currently the only statement for our module is ~io.dataOut := 0.U~ which means the output signal
+   of your module will always be 0, with the input signal remaining unused, as shown in the picture:
+   [[./Images/firstMyModule.png]]
+   
+   Before delving deeper into your module, it is first necessary to learn how to observe and
+   test circuit behavior, if not then you have no way to observe your changes.
+   
+** Testing your component
+   The second class in ~FirstTest~ is the ~TestRunner~ class which extends the peekPokeTester and 
+   takes a chisel module as its argument. 
+   extending peekPokeTester allows the tester to observe and alter the
+   state of the component ~MyModule~ using ~peek~, ~poke~, ~assert~ and ~step~
+   among others.
+   
+   You can see this for yourself by adding the following to the ~TestRunner~ class.
+   #+begin_src scala
+   val o = peek(c.io.dataOut)
+   say(s"observed state: $o")
+   #+end_src
+   When you run the test you should get the number 0 printed which should not come as much of a suprise.
+   Run the test by typing ~testOnly Examples.FirstTest~ in your sbt console.
+   ~peek~ allows you to observe the state of a signal, while its counterpart ~poke~ lets you input a
+   signal to your circuit.
+   To drive the input with the value 3, you can add the following to the body of ~TestRunner~:
+   #+begin_src scala
+   poke(c.io.dataIn, 4)
+   val o2 = peek(c.io.dataOut)
+   say(s"observed state after poking: $o2")
+   #+end_src
+   however this will not have any measurable effect since, as discussed in the previous section,
+   ~datatIn~ is not connected to anything.
+   
+   You can now experiment with the code in ~MyModule~.
+   Try adding the following statement
+   #+begin_src scala
+   io.dataOut := io.dataIn + incrementBy.U
+   #+end_src
+   to the body of ~MyModule~ you should now see a different result when running the test.
+   When you run the test again you will see that the value of the output changes after
+   the input signal gets poked to 3.
+   This corresponds to the following circuit:
+   [[./Images/myInc.png]]
+   
+   The test runner runs all its statements procedurally, that is it just executes all the statements in the
+   order they're defined.
+   You can see this for yourself by adding a for loop:
+   #+begin_src scala
+   for(ii <- 0 until 10){
+     poke(c.io.dataIn, ii.U)
+     val o3 = peek(c.io.dataOut)
+     say(s"observed state at iteration $ii: $o")
+   }
+   #+end_src
+   
+** It's all procedural
+
+
    The code for the snippets in this subchapter can be found in the directory src/test/scala/Examples/.
    You can run them using sbt by running ./sbt in your project root which will open
    your sbt console.
@@ -151,7 +299,7 @@
    the module using what is called a peek poke tester.
 *** Creating a peek poke tester
     #+begin_src scala
-    class TheTestRunner(c: MyIncrement) extends PeekPokeTester(c)  {
+    class TestRunner(c: MyIncrement) extends PeekPokeTester(c)  {
       for(ii <- 0 until 5){
         poke(c.io.dataIn, ii)
         val o = peek(c.io.dataOut)

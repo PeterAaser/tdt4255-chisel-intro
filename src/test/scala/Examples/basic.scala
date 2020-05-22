@@ -22,7 +22,7 @@ class MyIncrementTest extends FlatSpec with Matchers {
         val dataOut = Output(UInt(32.W))
       }
     )
-  
+
     io.dataOut := io.dataIn + incrementBy.U
   }
 
@@ -65,13 +65,13 @@ class MyIncrementManyTest extends FlatSpec with Matchers {
         val dataOut = Output(UInt(32.W))
       }
     )
-  
+
     val incrementors = Array.fill(numIncrementors){ Module(new MyIncrement(incrementBy)) }
-  
+
     for(ii <- 1 until numIncrementors){
       incrementors(ii).io.dataIn := incrementors(ii - 1).io.dataOut
     }
-  
+
     incrementors(0).io.dataIn := io.dataIn
     io.dataOut := incrementors.last.io.dataOut
   }

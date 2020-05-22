@@ -28,7 +28,7 @@ object TestUtils {
 
   def wrapTester(test: => Unit): Unit = {
     try { test }
-    catch { 
+    catch {
       case e: firrtl.passes.CheckInitialization.RefNotInitializedException => {
         println("##########################################################")
         println("##########################################################")
@@ -57,7 +57,7 @@ object TestUtils {
 class MyBundle extends Bundle {
   val signal = UInt(32.W)
 }
-val mySignal = new MyBundle        
+val mySignal = new MyBundle
                ^^^^ Wrong!
 should be
 val mySignal = Wire(new MyBundle)
@@ -91,7 +91,7 @@ val mySignal = Wire(new MyBundle)
       super.step(n)
     }
     def getLog = log
-  
+
     def writeLog = {
       import cats.effect.IO
       import SVGRender._
@@ -117,6 +117,11 @@ object FileUtils {
   def say(word: Any)(implicit filename: sourcecode.File, line: sourcecode.Line): Unit = {
     val fname = filename.value.split("/").last
     println(Console.YELLOW + s"[${fname}: ${sourcecode.Line()}]" + Console.RESET + s" - $word")
+  }
+
+  def warn(word: Any)(implicit filename: sourcecode.File, line: sourcecode.Line): Unit = {
+    val fname = filename.value.split("/").last
+    println(Console.RED + s"[${fname}: ${sourcecode.Line()}][WARN:]" + s" - $word" + Console.RESET )
   }
 
   def getListOfFiles(dir: String): List[File] =
@@ -173,7 +178,7 @@ object FileUtils {
       .through(text.utf8Encode)
       .through(fs2.io.file.writeAll(svgDest, EC))
   }
-  
+
   def getSvg(moduleName: String): Stream[IO, String] = {
     say(getAllSvgs)
     say(moduleName)
