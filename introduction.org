@@ -47,7 +47,7 @@
 
 
 ** Terms
-   Before delving into code it's necessary to define some terms.
+   Before writing code it's necessary to define some core terms.
    In the next section you will start writing some code that will use these
    concepts, so you if you are unsure what these terms actually mean you can
    get a practical introduction which should clarify things.
@@ -171,34 +171,44 @@
    ...
 
    sbt:chisel intro> 
+   #+end_src
+   
+   You can now type commands in the sbt shell:
+   #+begin_src
    sbt:chisel intro> testOnly Examples.firstChisel
    
    --- Lots of waiting ---
    #+end_src
    
-   After a long while this will run your first test in chisel!
+   This might take a while, but when done this will run your first test in chisel!
    As you can see from the output not much happened, but you should pay attention
    to the print statements, giving you an idea of how the control flow for the tests
    work.
    
    Now, open the file for the test you just ran, which is located in 
    ~/user/home/path/to/exercise/src/test/scala/Examples/firstTest.scala~
-   Take some time to parse what is going on here, use the print statements to guide you.
-   The commented out code is there to show what you should end up with after this section,
+   (you obviously need to substitute out ~/user/home/path/to/exercise/~ with whatever location
+   you cloned the repository.
+
+   Take some time to look over the code in the file.
+   When you ran the test several statements were printed, if you're interested in how tests are
+   executed you can look for the corresponding statements in ~firstTest.scala~, but keep in mind
+   that this is only useful if you want to write tests and if so you can go back to this part later.
+   
+   Now it is time to write some code. To ensure that you don't get lost, ~firstTest.scala~ has
+   commented out code which is there to show what you should end up with after this section (roughly),
    so try to not look too much at it unless your results deviate from what is described.
    
-   In its body, the class ~FirstTest~ defines two classes which are the essential parts of the test,
-   These are ~MyModule~ which describes a digital circuit, and ~TestRunner~ which describes
-   a set of operations to inspect and change the state of the circuit defined by ~MyModule~.
-   Lastly, the body of ~FirstTest~ synthesizes an instance of ~MyModule~ which is then subjected
-   to the testing procedure defined in ~TestRunner~, however this part is not important to you.
-   It should be noted that because ~FirstTest~ extends ~FlatSpec with Matchers~ from the scalatest 
-   framework, the class body has access to special syntax such as ~behavior of "my first module"~, 
-   which means this is _not_ normal scala syntax that you have to understand.
-   First we will look at the module, ~MyModule~
+   ~firstTest.scala~ defines three classes. ~FirstTest~ is the "main method" for the test, and the
+   two other classes define a circuit (~MyModule~) and a test (~TestRunner~) to be run on that circuit.
+   By extending Matchers and FlatSpec the ~FirstTest~ class gains access to syntax that is unfamiliar
+   even if you know scala. 
    
    
 ** Your first component
+   In this section you should keep using the test from the previous section:
+   ~/user/home/path/to/exercise/src/test/scala/Examples/firstTest.scala~
+
    Just like the ~FirstTest~ class obtain special syntax from extending the test
    framework, by extending ~chisel3.Module~ the class ~MyModule~ can now be
    synthesized into a circuit component, so long as it defines an io port. In
@@ -213,6 +223,9 @@
    test circuit behavior, if not then you have no way to observe your changes.
    
 ** Testing your component
+   In this section you should keep using the test from the previous section:
+   ~/user/home/path/to/exercise/src/test/scala/Examples/firstTest.scala~
+   
    The second class in ~FirstTest~ is the ~TestRunner~ class which extends the peekPokeTester and 
    takes a chisel module as its argument. 
    extending peekPokeTester allows the tester to observe and alter the
@@ -220,6 +233,8 @@
    among others.
    
    You can see this for yourself by adding the following to the ~TestRunner~ class.
+   If you're unsure where that is you can search for "This is the body of the TestRunner" in ~firstTest.scala~
+   
    #+begin_src scala
    val o = peek(c.io.dataOut)
    say(s"observed state: $o")
@@ -259,163 +274,53 @@
    }
    #+end_src
    
-** It's all procedural
+   
+** What about step?
+   In this section you should keep using the test from the previous sections:
+   ~/user/home/path/to/exercise/src/test/scala/Examples/firstTest.scala~
+   
+   The next peekPokeTester functionality you must know is ~step(n)~, a special procedure that steps 
+   the clock by ~n~ cycles (typically once).
+   For the circuit you are currently working with stepping will not do anything useful since
+   the module you have defined is combinatorial.
+   In order to observe this, you can add ~step(1)~ in the for loop where you will get the same
+   exact answer.
 
+   To see the purpose of step, try implementing the register snippet shown in the terminology
+   section, shown here:
 
-   The code for the snippets in this subchapter can be found in the directory src/test/scala/Examples/.
-   You can run them using sbt by running ./sbt in your project root which will open
-   your sbt console.
-
-   This will start a large download, so be patient even if it looks like it's stuck.
-
-   The first component we will consider is a simple combinatorial incrementor:
    #+begin_src scala
-   // Using `val` in a class argument list makes that value public.
-   class MyIncrement(val incrementBy: Int) extends Module {
-     val io = IO(
-       new Bundle {
-         val dataIn  = Input(UInt(32.W))
-         val dataOut = Output(UInt(32.W))
-       }
-     )
-   
-     io.dataOut := io.dataIn + incrementBy.U
-   }
+   val regA = RegInit(2.U(4.W))
+   val regB = RegInit(1.U(4.W))
+   regA := regB
+   regB := regA
+   io.dataOut := regA
    #+end_src
+
+   Try running your test again, once with ~step(1)~ and once without and observe the difference.
+   Without ~step(1)~ the output stays the same for each iteration of the test loop since as discussed
+   previously a registers state cannot change without the clock ticking.
+   When you run the test with ~step(1)~ included, you will see that the output alternates between 1 and 2.
+
+   You should internalize what is going on here, particularily how running a for loop does not automatically
+   step the clock of the circuit!
    
-   with incrementBy = 3 we get the following circuit:
-   [[./Images/myInc.png]]
+
+** Experimenting with your design
+   You now have a good starting point to start experimenting with how chisel works.
+   What happens if you drive a wire twice like this?
+   #+begin_src scala
+   io.dataOut := 0.U
+   io.dataOut := 3.U
+   #+end_src
+   Try it for yourself, and you will see that the last statement sets the final value.
    
-   The code for this circuit as well as the tests described next subsection can be found in
-   [[./src/test/scala/Examples/basic.scala][src/test/scala/Examples/basic.scala]]
-
-
-** Testing your chisel component
-   After creating a module you might wonder how it can be run.
-   It is not a program, it's a description of a digital circuit, so in order to "run" a chisel model
-   we have to simulate it.
+   Next, what happens if ~io.dataOut~ is *not* driven?
+   removing all statements that drive ~io.dataOut~ and see what happens when you run the test.
+   You will now get a fairly scary error message, and for now you should ignore it and ensure that
+   ~io.dataOut~ is driven by a value. Troubleshooting is covered later, once the core concepts have
+   been introduced.
    
-   This is done by creating a test program where the test runner drives inputs and reads outputs from 
-   the module using what is called a peek poke tester.
-*** Creating a peek poke tester
-    #+begin_src scala
-    class TestRunner(c: MyIncrement) extends PeekPokeTester(c)  {
-      for(ii <- 0 until 5){
-        poke(c.io.dataIn, ii)
-        val o = peek(c.io.dataOut)
-        println(s"At cycle $ii the output of myIncrement was $o")
-        expect(c.io.dataOut, ii+c.incrementBy)
-      }
-    }
-    #+end_src
-    
-    There are three features of the peek poke tester on display here:
-
-    1. a peek poke tester has the ability to peek at a value, returning its state. 
-       This however is restricted to the modules *io only*
-
-    2. it has the ability to poke (set) the value of an input signal.
-       Again, this can be done to *input io only*
-    
-    3. It can expect a signal to have a certain value and throw an exception if not met.
-       Expect is defined in terms of peek.
-    
-    A peek poke tester can also /step/ the circuit, this will be covered when stateful circuits
-    have been introduced.
-   
-*** Running a peek poke tester
-    The test runner class we have defined requires a MyIncrement module that can be simulated.
-    However, by writing ~val inc3 = Module(new MyIncrement(3))~ the return value is a /chisel graph/,
-    which if you recall from the hdl introduction is not enough to actually test the circuit.
-    In order to interact with a circuit the schematic must be interpreted, resulting in a 
-    *circuit simulator* which the peek poke tester can interact with.
-    
-    If this isn't clear don't worry, in terms of code all we need to do is to invoke a chisel method for
-    building the circuit:
-    
-    #+begin_src scala
-    chisel3.iotesters.Driver(() => new MyIncrement(3)) { c =>
-      new TheTestRunner(c)
-    }
-    #+end_src
-
-    Unfortunately this code might be a little hard to parse if you're new to scala. 
-    Understanding it is not necessary, it is sufficient to simply swap 
-    ~MyIncrement(3)~ in ~(() => MyIncrement(3))~ with the module you want to test, and
-    ~TheTestRunner(c)~ with the test runner you want to run.
-
-    #+begin_src scala
-    chisel3.iotesters.Driver(() => new MyIncrement(3)) { c =>
-      new TheTestRunner(c)
-    }
-    #+end_src
-
-*** Putting it together into a runnable test
-    We want to be able to run our test from sbt. To do this we use the scalatest framework.
-    A test looks like this:
-
-    #+begin_src scala
-    class MyTest extends FlatSpec with Matchers {
-      behavior of "the test that I have written"
-
-      it should "sum two numbers" in {
-        2 + 2
-      } should be 4
-    }
-    #+end_src
-    
-    The tester class introduces a lot of special syntax, but like above it is not necessary 
-    to understand how, simply using the template above is sufficient.
-
-    By applying our circuit description and test class to the tester template we end up with:
-
-    #+begin_src scala
-    class MyIncrementTest extends FlatSpec with Matchers {
-      behavior of "my increment"
-    
-      it should "increment its input by 3" in {
-        chisel3.iotesters.Driver(() => new MyIncrement(3)) { c =>
-	//                                 ^^^^^^^^^^^^^^^ The component we want to test
-          new TheTestRunner(c)
-	  //  ^^^^^^^^^^^^^^^^ The tester we want to run
-        } should be(true)
-      }
-    }
-    #+end_src
-    
-    By creating this test it is now possible to run it from sbt.
-    There are two ways to test. By simply writing "test" in the sbt console as so:
-    ~sbt:chisel-module-template> test~ every single test will be run.
-    Since this creates a lot of noise it's more useful to run "testOnly":
-    ~sbt:chisel-module-template> testOnly Examples.MyIncrementTest~ where "Examples" 
-    is the name of the package and MyIncrementTest is the name of the test.
-    The tests for the exercise itself is located in Ex0, so for instance
-    ~sbt:chisel-module-template> testOnly Ex0.MatrixSpec~ will run the matrix test.
-    
-    Note: by running "test" once you can use tab completion in the sbt shell to find tests with testOnly.
-    using testOnly <TAB>
-    
-    Running the test should look something like this.
-    #+begin_src text
-    sbt:chisel-module-template> testOnly Examples.MyIncrementTest
-    Run starting. Expected test count is: 0
-    ...
-    Circuit state created
-    [info] [0.001] SEED 1556890076413
-    [info] [0.002] At cycle 0 the output of myIncrement was 3
-    [info] [0.003] At cycle 1 the output of myIncrement was 4
-    [info] [0.003] At cycle 2 the output of myIncrement was 5
-    [info] [0.003] At cycle 3 the output of myIncrement was 6
-    [info] [0.003] At cycle 4 the output of myIncrement was 7
-    test MyIncrementTestMyIncrement Success: 5 tests passed in 5 cycles taking 0.011709 seconds
-    [info] [0.004] RAN 0 CYCLES PASSED
-    - should increment its input by 3
-    Run completed in 771 milliseconds.
-    ...
-    #+end_src
-
-    In the Example.scala file you can find the entire test.
-    The only difference is that everything is put in the same class.
 
 ** Using modules
    Let's see how we can use our module by instantiating it as a submodule:
