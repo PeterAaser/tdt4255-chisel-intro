@@ -51,10 +51,10 @@ class MyModule(val incrementBy: Int) extends chisel3.Module {
   )
 
   /**
-    This is the body of the 
+    This is the body of MyModule
     */
 
-  // io.dataOut := 0.U
+  io.dataOut := 0.U
 
   // The commented code is supplied so that you should have an idea of what you should
   // end up with when you're through the introductionary section.

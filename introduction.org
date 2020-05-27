@@ -205,7 +205,7 @@
    even if you know scala. 
    
    
-** Your first component
+** Your first component (module)
    In this section you should keep using the test from the previous section:
    ~/user/home/path/to/exercise/src/test/scala/Examples/firstTest.scala~
 
@@ -253,7 +253,8 @@
    ~datatIn~ is not connected to anything.
    
    You can now experiment with the code in ~MyModule~.
-   Try adding the following statement
+   If you're unsure where that is you can search for "This is the body of MyModule" in ~firstTest.scala~.
+   Try adding the following statement:
    #+begin_src scala
    io.dataOut := io.dataIn + incrementBy.U
    #+end_src
@@ -307,6 +308,9 @@
    
 
 ** Experimenting with your design
+   In this section you should keep using the test from the previous sections:
+   ~/user/home/path/to/exercise/src/test/scala/Examples/firstTest.scala~
+   
    You now have a good starting point to start experimenting with how chisel works.
    What happens if you drive a wire twice like this?
    #+begin_src scala
@@ -321,10 +325,54 @@
    ~io.dataOut~ is driven by a value. Troubleshooting is covered later, once the core concepts have
    been introduced.
    
-
-** Using modules
-   Let's see how we can use our module by instantiating it as a submodule:
+   Next, you can try adding another input or output signal to ~MyModule~.
+   Remember that an input must be defined as such, same with outputs.
    #+begin_src scala
+   // An input can ONLY be defined in the IO bundle
+   val input = Input(UInt(32.W))
+
+   // Same for outputs
+   val output = Output(UInt(32.W))
+   #+end_src
+   
+   For this exercise it is sufficient to use only ~UInt(32.W)~ for inputs and outputs, thus the
+   following information can be skipped for now:
+   When defining an input or output the type can be something else than ~UInt~, for instance it can
+   be a collection of wires previously defined, or just a signed integer ~SInt~.
+   Furthermore, it is not strictly necessary to define the width of the ~UInt~ input as chisel can
+   usually figure out this on its own, however it is good practice to define bit widths manually
+   until you become more familiar with the language.
+   
+   In the next section you should open the file ~basic.scala~ where a number of components have
+   already been defined. It is located in the same folder as ~firstTest.scala~
+   
+# *** Questions:
+#     + 1: What is the difference between the argument ~incrementBy~ and the IO defined in ~MyModule~?
+#     + 2: Can you drive a wire with multiple signals?
+#     + 3: ???
+
+# *** Answers:
+#     + 1: 
+#     + 2: Can you drive a wire with multiple signals?
+#     + 3: ???
+   
+** Using modules
+   In this section we cover the premade circuits and tests located at:
+   ~/user/home/path/to/exercise/src/test/scala/Examples/basic.scala~
+   *NOTE: This is a different file than the previous section!*
+   
+   A quick look through ~basic.scala~ shows that there are many classes extending ~FlatSpec~
+   and ~Matchers~, which you should recall from previous chapter means they can be run as tests.
+   Try running the first test in ~basic.scala~, ~MyIncrementTest~ by writing
+   ~sbt:chisel-module-template> testOnly Examples.MyIncrementTest~
+   You will see that ~MyIncrement~ is essentially the same circuit as what you should have ended
+   up with in ~firstTest.scala~ by following the exercise text thus far.
+
+   Next, let's take a look at how you can create new Modules by reusing submodules.
+   You could chain together two modules by instantiating them as submodules.
+   Note that you must use the ~Module~ constructor when doing so, as annotated in the example.
+   #+begin_src scala
+   // Not part of basic.scala
    class MyIncrementTwice(incrementBy: Int) extends Module {
      val io = IO(
        new Bundle {
@@ -332,29 +380,90 @@
          val dataOut = Output(UInt(32.W))
        }
      )
-   
+
      val first  = Module(new MyIncrement(incrementBy))
      val second = Module(new MyIncrement(incrementBy))
-   
+     //           ^^^^^^ Note the Module constructor
+
      first.io.dataIn  := io.dataIn
      second.io.dataIn := first.io.dataOut
-   
+
      io.dataOut := second.io.dataOut
    }
    #+end_src
    
-   The RTL diagram now looks like this:
+   Here two ~MyIncrement~ modules are instantiated, using the output of the first incrementor
+   as the input for the second.
    
-   Note how the modules ~first~ and ~second~ are now drawn as black boxes. 
-   When drawing RTL diagrams we're not interested in the internals of submodules.
-
-   However, what if we want to instantiate an arbitrary amount of incrementors and chain them?
-   To see how this can be done it is necessary to take a detour:
-
+   Sometimes it is useful to connect an arbitrary amount of modules programatically rather than
+   manually.
+   A rough division of labor between scala and chisel can be summed up as follows:
+   Chisel is used to define what a module does
+   Scala is used to define how modules are connected together to form the final circuit.
+   There is some overlap however, and this will cause you much frustration as you peel away the
+   concepts of hardware design.
+   In the following section some of these differences will be explained, but from experience it
+   takes some practical experience to truly grasp the differences.
 
 ** Leveraging Chisel with Scala
-   Recall from the hdl chapter how a chisel program is using scala to build chisel.
-   To give an idea of what that means let's consider conditional statements in chisel:
+   In this section we cover the premade circuits and tests located at:
+   ~/user/home/path/to/exercise/src/test/scala/Examples/basic.scala~
+   
+   If you already read the hdl chapter, recall how a chisel program is using scala to build chisel.
+   If not, just keep following and hopefully things will be clear, if not you can read the [[./hdl.org][hdl chapter]].
+   
+   First, lets look at boolean values.
+   In scala a boolean value can be defined like this:
+   #+begin_src scala
+   val scalaBool: Boolean = true
+   #+end_src
+   What this means is that at some memory a bit is set to 1, and ~scalaBool~ points to this bit so it can
+   be accessed in a program.
+   
+   What about a boolean value in a circuit?
+   You can define a boolean signal in a circuit like this:
+   #+begin_src scala
+   val chiselBool: Chisel3.Bool = true.B
+   #+end_src
+   What does this actually mean?
+   ~chiselBool~ is a reference to an object that defines a single ~wire~ that is always 1
+   (which in a physical circuit means it is connected to the voltage plane)
+   Note that chisel literals (i.e fixed or hardcoded values) are constructed using their
+   scala counterpart with an added ~.B~ or ~.U~ depending on what we want to represent.
+   
+   Even though they both have the same functionality, these are two very different things, and
+   it does not make sense when mixed. For example the following:
+   #+begin_src scala
+   val chiselBool: Chisel3.Bool = true.B
+   if(chiselBool || scalaBool)
+     say("This will never compile, so this will never get printed")
+   #+end_src
+   Does not compile as it attempts to use a chisel boolean (i.e a description of a wire that is
+   set to 1) with a scala boolean which does not make sense.
+
+   
+   Next lets look at numbers.
+   #+begin_src scala
+   val scalaInt: Int = 123
+   #+end_src
+   Just like the ~scalaBool~, ~scalaInt~ refers to a memory location of 32 bits set to the value 123
+   
+   What about a numerical value in a circuit?
+   #+begin_src scala
+   val chiselUInt: Chisel3.UInt = 123.U(12.W)
+   #+end_src
+   Just like with booleans, we can create a literal by calling ~.U~ on an integer.
+   Additionally, it is often necessary to specify how many physical wires are used to represent this integer.
+   In this example the width has been fixed to 12, which means ~chiselUInt~ represents 12 physical wires
+   where some are connected to the ground plane (logical 0) and others to VCC (logical 1)
+   
+   #+begin_src
+   Wire no: 0  | 1  | 2  | 3  | 4  | 5  | 6  | 7  | 8  | 9  | 10 | 11
+   Value    0    0    0    0    0    1    1    1    1    0    1    1
+   #+end_src scala
+
+   
+   Next we will look at conditional statements in chisel and scala and how they differ.
    #+begin_src scala
    class ChiselConditional() extends Module {
      val io = IO(
@@ -378,10 +487,17 @@
    This code describes the following circuit:
    [[./Images/ChiselConditional.png]]
 
-   If the RTL is unfamiliar, the two leftmost components are ALUs which do arithmetic (addition and 
-   subtraction in this case)
-   The rightmost component is a multiplexer which selects an input signal based on a selector signal,
-   kind of like a railroad switch.
+   If the RTL is unfamiliar, the two leftmost components that look somewhat like boxer shorts 
+   are ALUs which do arithmetic (addition and subtraction in this case).
+   Both of these take input from input signals a and b and produce an output signal with the result
+   of the arithmetic operation.
+
+   The rightmost component is a multiplexer which selects one of the two results from the ALUs, decided
+   by ~Op_sel~. Consequently, both the results from the addition and subtraction are always available, 
+   but one of them is discarded by the multiplexer while the other is chosen.
+   
+   If you're unsure how this circuit works you can attempt to write your own test for them like you did 
+   in ~firstTest.scala~.
 
    These conditional statements are implemented at a hardware level, but what is their relation to scalas
    if else statements?
