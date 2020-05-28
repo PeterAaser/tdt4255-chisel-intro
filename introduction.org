@@ -56,14 +56,15 @@
 
      A wire is a bundle of 1 to N condictive wires (yes, that is a recursive 
      definition, but I think you get what I mean). These wires are connected
-     either to ground or a voltage source, corresponding to 0 or 1, which
-     is useful for representing numbers
+     either to ground (logical 0) or a voltage plane (logical 1), which is how
+     numbers are represented.
      
      We can define a wire consisting of 4 physical wires in chisel like this
      #+begin_src scala
      val myWire = Wire(UInt(4.W))
      #+end_src
- 
+     
+     
    + *Driving*
 
      A wire in on itself is rather pointless since it doesn't do anything.
@@ -222,6 +223,18 @@
    Before delving deeper into your module, it is first necessary to learn how to observe and
    test circuit behavior, if not then you have no way to observe your changes.
    
+   Next, try removing the ~.U~ part so you get the following ~io.dataOut := 0~
+   When running the test you will get an error. Pay attention to the following part of your error:
+   #+begin_src 
+   [error] /home/peter/datateknikk/tdt4255-chisel-intro/src/test/scala/Examples/firstTest.scala:57:17: type mismatch;
+   [error]  found   : Int(0)
+   [error]  required: chisel3.core.Data
+   #+end_src
+   The error is pretty clear, you've used a scala Int where a chisel UInt was expected.
+   This is a typical error, and it usually means you have forgotten a ~.B~, ~.U~, ~.W~ or ~.S~.
+   The underlying reasons for the error is something that will be covered later, but for now it
+   is sufficient to know that you will get errors if you forget these.
+   
 ** Testing your component
    In this section you should keep using the test from the previous section:
    ~/user/home/path/to/exercise/src/test/scala/Examples/firstTest.scala~
@@ -343,18 +356,46 @@
    usually figure out this on its own, however it is good practice to define bit widths manually
    until you become more familiar with the language.
    
-   In the next section you should open the file ~basic.scala~ where a number of components have
-   already been defined. It is located in the same folder as ~firstTest.scala~
+** Driving and assignment
    
-# *** Questions:
-#     + 1: What is the difference between the argument ~incrementBy~ and the IO defined in ~MyModule~?
-#     + 2: Can you drive a wire with multiple signals?
-#     + 3: ???
+   You way wonder what the difference between ~:=~ and ~=~ is.
+   Consider two registers defined as
+   #+begin_src scala
+   var regA = Reg(UInt(8.W))
+   var regB = Reg(UInt(8.W))
+   #+end_src
+   ~regA~ and ~regB~ are *references* to two objects that describe a chisel register as shown:
+   
+   #+attr_html: :width 200px
+   #+attr_latex: :width 200px
+   [[./Images/assign1.png]]
+   
+   By *assigning* one register to the other nothing changes in the chisel graph, instead the reference
+   to one of the registers are lost.
+   #+begin_src scala
+   regA = regB
+   #+end_src
+   This is visualized in the following image, and should be avoided.
+   As long as ~val~ is used instead of ~var~ this error cannot be performed, so stick to ~val~!
+   
+   #+attr_html: :width 200px
+   #+attr_latex: :width 200px
+   [[./Images/assign2.png]]
 
-# *** Answers:
-#     + 1: 
-#     + 2: Can you drive a wire with multiple signals?
-#     + 3: ???
+   By *driving* one register from the other a wire between the registers is created.
+   #+begin_src scala
+   regA := regB
+   #+end_src
+   
+   #+attr_html: :width 200px
+   #+attr_latex: :width 200px
+   [[./Images/assign3.png]]
+   
+   When driving, it is always the leftmost signal that gets driven (i.e "recieves" the value) and
+   the rightmost signal that drives.
+   
+   A rule of thumb is to use ~=~ when you want to bind to a symbol, and ~:=~ when you want to alter
+   the chisel graph.
    
 ** Using modules
    In this section we cover the premade circuits and tests located at:
@@ -459,10 +500,16 @@
    
    #+begin_src
    Wire no: 0  | 1  | 2  | 3  | 4  | 5  | 6  | 7  | 8  | 9  | 10 | 11
-   Value    0    0    0    0    0    1    1    1    1    0    1    1
+   Value    1    1    0    1    1    1    1    0    0    0    0    0
    #+end_src scala
 
-   
+   If you want to experiment with this you can select a subset of the wires in a UInt
+   #+begin_src scala
+   val chiselUInt: Chisel3.UInt = 123.U(12.W)
+   val firstBit = chiselUInt(0) // a signal of width 1 with the value 1
+   val subWord = chiselUInt(4, 1) // a signal of width 4 with value 1101 (11)
+   #+end_src
+
    Next we will look at conditional statements in chisel and scala and how they differ.
    #+begin_src scala
    class ChiselConditional() extends Module {
@@ -559,7 +606,7 @@
    }
    #+end_src
    Keep in mind that the for-loop only exists at design time, just like a for loop
-   generating a table in HTML will not be part of the finished HTML.
+   generating a table in HTML will not be part of the finished HTML!!
    
 *** Troubleshooting scala and chisel mixups
     With the when/otherwise and if/else example the meanings were different, as showed in
@@ -589,8 +636,6 @@
     #+end_src
     
     If you uncomment and try to compile this you will get an error:
-    (only running compile works, as it will only compile the code in src/main*)
-    
     #+begin_src scala
     sbt:chisel-module-template> test:compile
     ...

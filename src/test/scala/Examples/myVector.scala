@@ -111,5 +111,4 @@ class MyVecAltSpec extends FlatSpec with Matchers {
       new MyVecTester(c)
     } should be(true)
   }
-
 }
