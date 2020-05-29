@@ -1,0 +1,56 @@
+* Waveform debugging
+  This mini-tutorial uses gtkwave which can be installed with
+  ~sudo apt install gtkwave~ on ubuntu.
+
+  In chisel this is the only viable way to do whitebox testing (i.e peer inside the circuit)
+  other than printf, thus it can be a very useful tool if you learn it.
+
+** Creating a waveform (.vcd) file
+   In order for a test to generate a .vcd file the test must specify this in the driver argument.
+   Open the DelaySpec test found in
+   ~/user/home/path/to/exercise/Examples/stateful.scala~
+   
+   Now, replace the line that says
+   ~chisel3.iotesters.Driver(() => new SimpleDelay) { c =>~
+   with
+   ~chisel3.iotesters.Driver.execute(Array("--generate-vcd-output", "on", "--backend-name", "treadle"), () => new SimpleDelay) { c =>~
+   and run the associated test from sbt with
+   ~sbt: testOnly Examples.DelaySpec~
+
+   You should now be able to find a .vcd file in your project root, located somewhere near
+   ~/user/home/path/to/exercise/test_run_dir/Example.DelaySpec$Number/SomethingSomething.vcd~
+   which you can open with gtkwave.
+   
+
+** Using gtkwave
+   When you open your file in gtkwave you will be met with something similar to this:
+   [[./Images/wave1.png]]
+
+   First, click the SimpleDelay file pointed at by the red arrow.
+   This will open the top level signal list where the red circle is.
+   Next, select some of the signals and drag them into the box to the right that says "signals"
+   so your view will look like this:
+   [[./Images/wave2.png]]
+
+   This view is a little hard to read, so you can add colors and change the type of encoding.
+   After playing around a little I get something that looks like this:
+   [[./Images/wave3.png]]
+
+** Reloading a waveform
+   Once you've set up a nice waveform window you can reuse it by reloading the waveform (ctrl shift r).
+   Try changing the code in stateful by adding a constant to delayReg and observe how, after running the
+   test (which will now fail) you will get new values in gtkwave after reloading.
+   [[./Images/wave4.png]]
+   
+** Saving your session
+   In order to save your layout use write save file as (ctrl shift S) and upon opening everything will
+   be restored as you left it.
+
+** Custom encodings
+   This is especially relevant for the later exercises when you will build a RISC-V 5-stage pipeline.
+   In order to give special names to values, right click the signal and select 
+   ~Data Format -> Translate Filter File -> Enable and Select~
+   You can use the supplied filterTest which is located at the project root, which will change 0 to "zero",
+   1 to "One" and 2 to "Two".
+   The syntax of a filter file is simple: ~Key <Tab> Value~
+   [[./Images/wave5.png]]

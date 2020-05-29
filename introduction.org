@@ -1102,6 +1102,8 @@
    rely too much on it because it fails to scale to very large tests unless you spend time learning
    how to use it properly.
    
+   A short tutorial on waveform debugging can be found at TODO
+   
 ** Visualizing generated circuits
    While limited, it is possible to visualize your generated circuit using [[https://github.com/freechipsproject/diagrammer][diagrammer]].
    The necessary code to generate .fir file is in the main.scala file, just comment it out to generate

@@ -89,7 +89,8 @@ class MyIncrementManyTest extends FlatSpec with Matchers {
   behavior of "my incrementN"
 
   it should "increment its input by 3*4" in {
-    chisel3.iotesters.Driver(() => new MyIncrementN(4, 3)) { c =>
+    chisel3.iotesters.Driver.execute(Array("--generate-vcd-output", "on", "--target-dir", ".", "--backend-name", "treadle"), () => new MyIncrementN(3,4)) { c =>
+    // chisel3.iotesters.Driver(() => new MyIncrementN(4, 3)) { c =>
       new TheTestRunner(c)
     } should be(true)
   }

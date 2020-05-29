@@ -19,7 +19,7 @@ class SimpleDelay() extends Module {
   )
   val delayReg = RegInit(UInt(32.W), 0.U)
 
-  delayReg   := io.dataIn
+  delayReg   := io.dataIn + 100.U
   io.dataOut := delayReg
 }
 
@@ -28,7 +28,7 @@ class DelaySpec extends FlatSpec with Matchers {
   behavior of "SimpleDelay"
 
   it should "Delay input by one timestep" in {
-    chisel3.iotesters.Driver(() => new SimpleDelay) { c =>
+    chisel3.iotesters.Driver.execute(Array("--generate-vcd-output", "on", "--backend-name", "treadle"), () => new SimpleDelay) { c =>
       new DelayTester(c)
     } should be(true)
   }

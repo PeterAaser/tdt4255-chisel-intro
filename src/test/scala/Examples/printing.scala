@@ -15,10 +15,10 @@ class PrintfExampleSpec extends FlatSpec with Matchers {
 
   class PrintfExample() extends Module {
     val io = IO(new Bundle{})
-    
+
     val counter = RegInit(0.U(8.W))
     counter := counter + 1.U
-  
+
     printf("Counter is %d\n", counter)
     when(counter % 2.U === 0.U){
       printf("Counter is even\n")
@@ -82,7 +82,8 @@ class EvilPrintfSpec extends FlatSpec with Matchers {
 
   it should "tell a lie and hurt you" in {
     wrapTester(
-      chisel3.iotesters.Driver(() => new CountTo3) { c =>
+      chisel3.iotesters.Driver.execute(Array("--generate-vcd-output", "on", "--target-dir", "/home/peter/", "--backend-name", "treadle"), () => new CountTo3) { c =>
+      // chisel3.iotesters.Driver(() => new CountTo3) { c =>
         new CountTo3Test(c)
       } should be(true)
     )
@@ -115,10 +116,10 @@ class PeekInternalSpec extends FlatSpec with Matchers {
         val dataOut = Output(UInt(32.W))
       }
     )
-    
+
     val outerState = RegInit(0.U)
     val inner = Module(new Inner)
-    
+
     outerState      := io.dataIn
     inner.io.dataIn := outerState
     io.dataOut      := inner.io.dataOut
@@ -133,7 +134,7 @@ class PeekInternalSpec extends FlatSpec with Matchers {
 
   it should "Throw an exception" in {
     val success = try {
-      chisel3.iotesters.Driver(() => new Outer) { c =>
+      chisel3.iotesters.Driver(() => new Outer, "treadle") { c =>
         new OuterTester(c)
       } should be(true)
     }
@@ -147,7 +148,7 @@ class PeekInternalSpec extends FlatSpec with Matchers {
 
 /**
   * Inner state has been exposed manually
-  * 
+  *
   * This creates a lot of extra signals in the IO module, and it's a hassle to do the wiring.
   */
 class PeekInternalExposedSpec extends FlatSpec with Matchers {
@@ -183,10 +184,10 @@ class PeekInternalExposedSpec extends FlatSpec with Matchers {
         val outerStateDebug = Output(UInt(32.W))
       }
     )
-    
+
     val outerState = RegInit(0.U)
     val inner = Module(new Inner)
-    
+
     outerState      := io.dataIn
     inner.io.dataIn := outerState
     io.dataOut      := inner.io.dataOut
