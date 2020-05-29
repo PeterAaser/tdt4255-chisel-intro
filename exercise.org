@@ -21,9 +21,10 @@
 ** Task 1 - Vector
    The first component you should implement is a register bank for storing a vector.
    
-   In Vector.scala you will find the skeleton code for this component.
+   In the file Vector.scala you will find the skeleton code for this component.
    Unlike the standard Chisel.Vec our custom vector has a read enable which means that
    the memory pointed to by idx will only be overWritten when writeEnable is true.
+   There are many hints commented out in the source code if you should get stuck.
 
    Implement the vector and test that it works by running
    ~testOnly Ex0.VectorSpec~ in your sbt console.
@@ -64,18 +65,33 @@
    + Write enable is toggled only if the row is currently selected
    + row dataIn is driven by matrix dataIn
      
+   If you're unsure how to do this with a for loop you can try doing it manually first for some
+   fixed size, then generalize later with a loop.
+
    Since a vector will only overwrite data when writeEnable is toggled you can drive
    dataIn for all the vectors with the matrix dataIn.
 
    Run the tests with ~testOnly Ex0.MatrixSpec~
+   
+   *Important*: You cannot index ~rows~ as if it was a 2D array!
+   #+begin_src scala
+   // This does not compile, to see why consider the fact that the result of rows(1.U) is a
+   // Bundle{val idx: UInt, val dataIn: UInt, val writeEnable: Boolean, val dataOut: UInt}
+   // which means the only accessors you can use are idx, dataIn, writeEnable and dataOut.
+   rows(1.U)(1.U) := 2.U
+   #+end_src
+   
+   *Hint*: If you're unsure what your circuit is actually doing, change the Driver invocation
+   in ~MatrixSpec.scala~ to output .vcd files as explained in the [[./waveforms.org][Waveform debugging]] guide.
    
 ** Task 3 - Dot Product
    This component differs from the two previous in that it has no explicit control input,
    which might at first be rather confusing.
    
    With only two inputs for data, how do we know when the dotproduct has been calculated?
-   The answer to this is the ~elements~ argument, which tells the dot product calculator the
-   size of the input vectors.
+   The answer to this is the ~elements~ argument that the ~DotProd~ class takes in, which tells 
+   the dot product calculator the size of the input vectors.
+   
    Consequently, the resulting hardware can only (at least on its own) compute dotproducts
    for one size of vector, which is fine in our circuit.
    
@@ -140,6 +156,12 @@
     ~Counter.apply(cCond, 10)~ does the same as ~Counter(cCond, 10)~.
     To call the class constructor, use the ~new~ keyword.
 
+    *Important*:
+    If your circuit gets correct output shifted by one cycle it is likely because you are using the 
+    output of the accumulator register to drive dataOut which delays everything by one cycle.
+    Use the signal that drives the accumulator register to drive dataOut instead and this should resolve
+    itself.
+    
 
 ** Task 4 - Matrix Matrix multiplication
    With our matrix modules and dot product calculators we have every piece needed to 

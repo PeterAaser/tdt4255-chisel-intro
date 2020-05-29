@@ -23,6 +23,7 @@ class Vector(val elements: Int) extends Module {
     // TODO:
     // When writeEnable is true the content of internalVector at the index specified
     // by idx should be set to the value of io.dataIn
+    // If you are unsure how to access a vector element you can look at myVector.scala in .src/test/Examples/
   }
   // In this case we don't want an otherwise block, in writeEnable is low we don't change
   // anything

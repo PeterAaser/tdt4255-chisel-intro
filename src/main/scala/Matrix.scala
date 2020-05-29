@@ -20,9 +20,11 @@ class Matrix(val rowsDim: Int, val colsDim: Int) extends Module {
 
   /**
     * Placeholders.
-    * 
+    *
     * You can delete these when you see fit, they're just here so
     * that the circuit is valid and compiles/synthesizes correctly.
+    *
+    * In your finished work these can be deleted.
     */
   io.dataOut := 0.U
   for(ii <- 0 until rowsDim){
@@ -31,12 +33,17 @@ class Matrix(val rowsDim: Int, val colsDim: Int) extends Module {
     rows(ii).idx         := 0.U
   }
 
+
   /**
     * Your code here
     */
-
-  // Creates a vector of zero-initialized registers
+  // Fill a Vec with your Vector from the previous exercise.
+  // The naming conflict is a little unfortunate.
   val rows = Vec.fill(rowsDim)(Module(new Vector(colsDim)).io)
 
+  // When writeEnable is high, use rowIdx to select which row you want to operate on.
+  when(io.writeEnable){
+    val huh = rows(io.rowIdx)
+  }
 
 }
