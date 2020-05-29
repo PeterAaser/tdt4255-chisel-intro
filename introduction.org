@@ -573,7 +573,7 @@
     
     Which can yield two different circuits depending on the opSel argument:
     True:
-   [[ ./Images/ScalaCond1.png]]
+    [[./Images/ScalaCond1.png]]
     #+begin_src text
     .
     .
@@ -583,7 +583,7 @@
     .
     #+end_src
     False:
-   [[ ./Images/ScalaCond2.png]]
+    [[./Images/ScalaCond2.png]]
 
     In short, chisel conditionals define how the circuit should behave, whereas scala conditionals
     can define how the circuit should be put together.
