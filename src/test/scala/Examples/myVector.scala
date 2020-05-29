@@ -48,7 +48,7 @@ class MyVector() extends Module {
     }
   )
 
-  val values = Vec(0.U, 1.U, 2.U, 3.U)
+  val values = chisel3.Vec(0.U, 1.U, 2.U, 3.U)
 
   io.out := values(io.idx)
 }

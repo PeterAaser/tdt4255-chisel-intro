@@ -453,173 +453,188 @@
    If you already read the hdl chapter, recall how a chisel program is using scala to build chisel.
    If not, just keep following and hopefully things will be clear, if not you can read the [[./hdl.org][hdl chapter]].
    
-   First, lets look at boolean values.
-   In scala a boolean value can be defined like this:
-   #+begin_src scala
-   val scalaBool: Boolean = true
-   #+end_src
-   What this means is that at some memory a bit is set to 1, and ~scalaBool~ points to this bit so it can
-   be accessed in a program.
-   
-   What about a boolean value in a circuit?
-   You can define a boolean signal in a circuit like this:
-   #+begin_src scala
-   val chiselBool: Chisel3.Bool = true.B
-   #+end_src
-   What does this actually mean?
-   ~chiselBool~ is a reference to an object that defines a single ~wire~ that is always 1
-   (which in a physical circuit means it is connected to the voltage plane)
-   Note that chisel literals (i.e fixed or hardcoded values) are constructed using their
-   scala counterpart with an added ~.B~ or ~.U~ depending on what we want to represent.
-   
-   Even though they both have the same functionality, these are two very different things, and
-   it does not make sense when mixed. For example the following:
-   #+begin_src scala
-   val chiselBool: Chisel3.Bool = true.B
-   if(chiselBool || scalaBool)
-     say("This will never compile, so this will never get printed")
-   #+end_src
-   Does not compile as it attempts to use a chisel boolean (i.e a description of a wire that is
-   set to 1) with a scala boolean which does not make sense.
+*** Chisel and scala types
+    First, lets look at boolean values.
+    In scala a boolean value can be defined like this:
+    #+begin_src scala
+    val scalaBool: Boolean = true
+    #+end_src
+    What this means is that at some memory a bit is set to 1, and ~scalaBool~ points to this bit so it can
+    be accessed in a program.
+    
+    What about a boolean value in a circuit?
+    You can define a boolean signal in a circuit like this:
+    #+begin_src scala
+    val chiselBool: Chisel3.Bool = true.B
+    #+end_src
+    What does this actually mean?
+    ~chiselBool~ is a reference to an object that defines a single ~wire~ that is always 1
+    (which in a physical circuit means it is connected to the voltage plane)
+    Note that chisel literals (i.e fixed or hardcoded values) are constructed using their
+    scala counterpart with an added ~.B~ or ~.U~ depending on what we want to represent.
+    
+    Even though they both have the same functionality, these are two very different things, and
+    it does not make sense when mixed. For example the following:
+    #+begin_src scala
+    val chiselBool: Chisel3.Bool = true.B
+    if(chiselBool || scalaBool)
+      say("This will never compile, so this will never get printed")
+    #+end_src
+    Does not compile as it attempts to use a chisel boolean (i.e a description of a wire that is
+    set to 1) with a scala boolean which does not make sense.
 
-   
-   Next lets look at numbers.
-   #+begin_src scala
-   val scalaInt: Int = 123
-   #+end_src
-   Just like the ~scalaBool~, ~scalaInt~ refers to a memory location of 32 bits set to the value 123
-   
-   What about a numerical value in a circuit?
-   #+begin_src scala
-   val chiselUInt: Chisel3.UInt = 123.U(12.W)
-   #+end_src
-   Just like with booleans, we can create a literal by calling ~.U~ on an integer.
-   Additionally, it is often necessary to specify how many physical wires are used to represent this integer.
-   In this example the width has been fixed to 12, which means ~chiselUInt~ represents 12 physical wires
-   where some are connected to the ground plane (logical 0) and others to VCC (logical 1)
-   
-   #+begin_src
-   Wire no: 0  | 1  | 2  | 3  | 4  | 5  | 6  | 7  | 8  | 9  | 10 | 11
-   Value    1    1    0    1    1    1    1    0    0    0    0    0
-   #+end_src scala
+    
+    Next lets look at numbers.
+    #+begin_src scala
+    val scalaInt: Int = 123
+    #+end_src
+    Just like the ~scalaBool~, ~scalaInt~ refers to a memory location of 32 bits set to the value 123
+    
+    What about a numerical value in a circuit?
+    #+begin_src scala
+    val chiselUInt: Chisel3.UInt = 123.U(12.W)
+    #+end_src
+    Just like with booleans, we can create a literal by calling ~.U~ on an integer.
+    Additionally, it is often necessary to specify how many physical wires are used to represent this integer.
+    In this example the width has been fixed to 12, which means ~chiselUInt~ represents 12 physical wires
+    where some are connected to the ground plane (logical 0) and others to VCC (logical 1)
+    
+    #+begin_src
+    Wire no: 0  | 1  | 2  | 3  | 4  | 5  | 6  | 7  | 8  | 9  | 10 | 11
+    Value    1    1    0    1    1    1    1    0    0    0    0    0
+    #+end_src scala
 
-   If you want to experiment with this you can select a subset of the wires in a UInt
-   #+begin_src scala
-   val chiselUInt: Chisel3.UInt = 123.U(12.W)
-   val firstBit = chiselUInt(0) // a signal of width 1 with the value 1
-   val subWord = chiselUInt(4, 1) // a signal of width 4 with value 1101 (11)
-   #+end_src
+    If you want to experiment with this you can select a subset of the wires that make up a ~UInt~
+    #+begin_src scala
+    val chiselUInt: Chisel3.UInt = 123.U(12.W)
+    val firstBit = chiselUInt(0) // a signal of width 1 with the value 1
+    val subWord = chiselUInt(4, 1) // a signal of width 4 with value 1101 (11)
+    #+end_src
 
-   Next we will look at conditional statements in chisel and scala and how they differ.
-   #+begin_src scala
-   class ChiselConditional() extends Module {
-     val io = IO(
-       new Bundle {
-         val a = Input(UInt(32.W))
-         val b = Input(UInt(32.W))
-         val opSel = Input(Bool())
-   
-         val out = Output(UInt(32.W))
-       }
-     )
-   
-     when(io.opSel){
-       io.out := io.a + io.b
-     }.otherwise{
-       io.out := io.a - io.b
-     }
-   }
-   #+end_src
-   
-   This code describes the following circuit:
-   [[./Images/ChiselConditional.png]]
+*** Chisel and scala control flow
+    Next we will look at conditional statements in chisel and scala and how they differ.
+    #+begin_src scala
+    class ChiselConditional() extends Module {
+      val io = IO(
+        new Bundle {
+          val a = Input(UInt(32.W))
+          val b = Input(UInt(32.W))
+          val opSel = Input(Bool())
+    
+          val out = Output(UInt(32.W))
+        }
+      )
+    
+      when(io.opSel){
+        io.out := io.a + io.b
+      }.otherwise{
+        io.out := io.a - io.b
+      }
+    }
+    #+end_src
+    
+    This code describes the following circuit:
+   [[ ./Images/ChiselConditional.png]]
 
-   If the RTL is unfamiliar, the two leftmost components that look somewhat like boxer shorts 
-   are ALUs which do arithmetic (addition and subtraction in this case).
-   Both of these take input from input signals a and b and produce an output signal with the result
-   of the arithmetic operation.
+    If the RTL is unfamiliar, the two leftmost components that look somewhat like boxer shorts 
+    are ALUs which do arithmetic (addition and subtraction in this case).
+    Both of these take input from input signals a and b and produce an output signal with the result
+    of the arithmetic operation.
 
-   The rightmost component is a multiplexer which selects one of the two results from the ALUs, decided
-   by ~Op_sel~. Consequently, both the results from the addition and subtraction are always available, 
-   but one of them is discarded by the multiplexer while the other is chosen.
-   
-   If you're unsure how this circuit works you can attempt to write your own test for them like you did 
-   in ~firstTest.scala~.
+    The rightmost component is a multiplexer which selects one of the two results from the ALUs, decided
+    by ~Op_sel~. Consequently, both the results from the addition and subtraction are always available, 
+    but one of them is discarded by the multiplexer while the other is chosen.
+    
+    If you're unsure how this circuit works you can attempt to write your own test for them like you did 
+    in ~firstTest.scala~.
 
-   These conditional statements are implemented at a hardware level, but what is their relation to scalas
-   if else statements?
-   
-   Lets consider an example using if and else:
-   #+begin_src scala
-   class ScalaConditional(opSel: Boolean) extends Module {
-     val io = IO(
-       new Bundle {
-         val a = Input(UInt(32.W))
-         val b = Input(UInt(32.W))
-   
-         val out = Output(UInt(32.W))
-       }
-     )
-   
-     if(opSel){
-       io.out := io.a + io.b
-     } else {
-       io.out := io.a - io.b
-     }
-   }
-   #+end_src
-   
-   Which can yield two different circuits depending on the opSel argument:
-   True:
-   [[./Images/ScalaCond1.png]]
-   #+begin_src text
-   .
-   .
-   .
-   .
-   .
-   .
-   #+end_src
-   False:
-   [[./Images/ScalaCond2.png]]
+    These conditional statements are implemented at a hardware level, but what is their relation to scalas
+    if else statements?
+    
+    Lets consider an example using if and else:
+    #+begin_src scala
+    class ScalaConditional(opSel: Boolean) extends Module {
+      val io = IO(
+        new Bundle {
+          val a = Input(UInt(32.W))
+          val b = Input(UInt(32.W))
+    
+          val out = Output(UInt(32.W))
+        }
+      )
+    
+      if(opSel){
+        io.out := io.a + io.b
+      } else {
+        io.out := io.a - io.b
+      }
+    }
+    #+end_src
+    
+    Which can yield two different circuits depending on the opSel argument:
+    True:
+   [[ ./Images/ScalaCond1.png]]
+    #+begin_src text
+    .
+    .
+    .
+    .
+    .
+    .
+    #+end_src
+    False:
+   [[ ./Images/ScalaCond2.png]]
 
+    In short, chisel conditionals define how the circuit should behave, whereas scala conditionals
+    can define how the circuit should be put together.
 
-   Let's look at how we can use another scala construct, the for loop, to create several
-   modules and chain them together:
-   #+begin_src scala
-   class MyIncrementN(val incrementBy: Int, val numIncrementors: Int) extends Module {
-     val io = IO(
-       new Bundle {
-         val dataIn  = Input(UInt(32.W))
-         val dataOut = Output(UInt(32.W))
-       }
-     )
-   
-     val incrementors = Array.fill(numIncrementors){ Module(new MyIncrement(incrementBy)) }
-   
-     for(ii <- 1 until numIncrementors){
-       incrementors(ii).io.dataIn := incrementors(ii - 1).io.dataOut
-     }
-   
-     incrementors(0).io.dataIn := io.dataIn
-     io.dataOut := incrementors.last.io.dataOut
-   }
-   #+end_src
-   Keep in mind that the for-loop only exists at design time, just like a for loop
-   generating a table in HTML will not be part of the finished HTML!!
-   
-*** Troubleshooting scala and chisel mixups
-    With the when/otherwise and if/else example the meanings were different, as showed in
-    the resulting circuitry.
-    It is typical to accidentally mix up chisel and scala however, and typically this will
-    not yield a valid program, instead you get compiler errors, which if you recall the
-    toolchain figure in the HDL chapter corresponds to the compiler stage between scala code 
-    and a chisel graph builder.
+*** Programatically assembling modules
+    Let's look at how we can use another scala construct, the for loop, to create several
+    modules and chain them together:
+    #+begin_src scala
+      class MyIncrementN(val incrementBy: Int, val numIncrementors: Int) extends Module {
+        val io = IO(
+          new Bundle {
+            val dataIn  = Input(UInt(32.W))
+            val dataOut = Output(UInt(32.W))
+          }
+        )
 
-    To show some typical errors consider the following code which can be found in
+        // Each module is stored in an array. Arrays are a scala construct, which means
+        // they can only be accessed with a scala int.
+        val incrementors = Array.fill(numIncrementors){ Module(new MyIncrement(incrementBy)) }
+
+        // the data input is connected to the previous modules output, creating what is known as
+        // a "human centipede" in popular culture.
+        for(ii <- 1 until numIncrementors){
+          incrementors(ii).io.dataIn := incrementors(ii - 1).io.dataOut
+        }
+
+        incrementors(0).io.dataIn := io.dataIn
+        io.dataOut := incrementors.last.io.dataOut
+      }
+    #+end_src
+    Keep in mind that the for-loop only exists at design time, just like a for loop
+    generating a table in HTML will not be part of the finished HTML!!
+   
+*** Indexing collections of elements
+    In hardware design it is often necessary to index a collection signals.
+    This use-case is also very suited to expose some of the pain-points of working with
+    two languages masquerading as one, so in this section extra focus is put on troubleshooting
+    problems which typically show up.
+    
+    The code in this section can be found in
     [[./src/test/scala/Examples/basic.scala][src/test/scala/Examples/myVector.scala]]
     (The non-compiling examples are commented out)
     
+    The design we will use to showcase indexing is a very basic one.
+    A vector of hardcoded values from 1 to 4 (you can imagine these values being something more interesting,
+    like cryptographic keys or color values if that makes it more exciting) is to be indexed by the input
+    signal.
+    When ~io.idx~ is 0 expected output is 1, when ~io.idx~ is 3 expected output is 4.
+    (The case when ~io.idx~ is out of bounds will also be covered)
+
+    A first implementation may look something like this. (it can be found in ~myVector.scala~, commented out.
     #+begin_src scala
     class MyVector() extends Module {
       val io = IO(
@@ -646,24 +661,27 @@
     #+end_src
  
     This error tells you that io.idx was of the wrong type, namely a ~chisel3.core.UInt~.
-    The List is a scala construct, it only exists when your design is synthesized, thus
+    The List is a scala construct, it only exists while your design is synthesized, thus
     attempting to index it with a chisel type does not make sense.
+    However, indexing is very useful on a hardware level, so chisel supplies its own collection 
+    type, used to index hardware collections.
 
     Let's try again using a chisel ~Vec~ which can be indexed by chisel values:
     #+begin_src scala
-    class MyVector() extends Module {
-      val io = IO(
-        new Bundle {
-          val idx = Input(UInt(32.W))
-          val out = Output(UInt(32.W))
-        }
-      )
-    
-      // val values: List[Int] = List(1, 2, 3, 4)
-      val values = Vec(1, 2, 3, 4)
- 
-      io.out := values(io.idx)
-    }
+      class MyVector() extends Module {
+        val io = IO(
+          new Bundle {
+            val idx = Input(UInt(32.W))
+            val out = Output(UInt(32.W))
+          }
+        )
+
+        // val values: List[Int] = List(1, 2, 3, 4)
+        // prefixing with chisel3. is not necessary, it just helps clarify that Vec is a chisel type.
+        val values = chisel3.Vec(1, 2, 3, 4)
+
+        io.out := values(io.idx)
+      }
     #+end_src
     
     Now you will get the following error instead:
@@ -686,10 +704,8 @@
     The ~<:~ symbol means subtype, meaning that the compiler expected the Vec to contain a chisel data type
     such as chisel3.Data.UInt or chisel3.Data.Boolean, and Int is not one of them!
     
-    A scala int represent 32 bits in memory, whereas a chisel UInt represents a bundle of wires that we
-    interpret as an unsigned integer, thus they are not interchangeable.
-    The difference between ~scala.Integer~ and ~chisel3.Data.UInt~ is analogous to that of if/else vs 
-    when/otherwise seen in the previous section.
+    This is the same issue covered previously, however it is useful to see this error again when shrouded
+    in compiler output that may be less helpful.
     
     To fix this, chisel UInts must be used
     #+begin_src scala
@@ -703,9 +719,6 @@
     
       val values = Vec(1.U, 2.U, 3.U, 4.U)
       
-      // Alternatively
-      // val values = Vec(List(1, 2, 3, 4).map(scalaInt => UInt(scalaInt)))
- 
       io.out := values(io.idx)
     }
     #+end_src
@@ -778,6 +791,9 @@
     be valid HTML, however the code will happily compile. Likewise, you can easily
     create a valid scala program producing an invalid chisel graph, such as this module found in
     [[./src/test/scala/Examples/basic.scala][src/test/scala/Examples/invalidDesigns.scala]]
+    
+    One such constraint is that any module you instantiate must have all its inputs driven.
+    What happens when a ~MyVector~ is instantiated without ~io.dataIn~ being driven in the following code?
     #+begin_src scala
     class Invalid() extends Module {
       val io = IO(new Bundle{})
@@ -788,7 +804,10 @@
  
     This code will happily compile, however when you attempt to create a simulator from the
     chisel graph the driver will throw an exception.
-    To see this you can run the following test (already implemented in invalidDesigns.scala):
+    To show this it's sufficient to attempt to synthesize the design, it will fail before attempting
+    to run the test.
+    
+    Since we're not interested in running a peek poke test we're using ~???~.
     #+begin_src scala
     class InvalidSpec extends FlatSpec with Matchers {
       behavior of "Invalid"
@@ -806,12 +825,13 @@
     }
     #+end_src
     
+    To verify that the design actually compiles you can run
     #+begin_src text
     sbt:chisel-module-template> compile:test
     ...
     #+end_src
-    As promised, this code compiles, but when you run the test which actually builds a simulator you
-    get the following:
+    
+    However, once you try actually running the test you will get the following error:
     #+begin_src text
     [success] Total time: 3 s, completed Apr 25, 2019 3:15:15 PM
     ...
@@ -831,7 +851,7 @@
     at firrtl.passes.CheckInitialization$.checkInitM$1(CheckInitialization.scala:78)
     #+end_src
     
-    While scary, the actual error is only this line:
+    While scary, the actual error is only this line, which should look something like this:
     #+begin_src text
     firrtl.passes.CheckInitialization$RefNotInitializedException: @[Example.scala 25:21:@20.4] : [module Invalid]  Reference myVec is not fully initialized.
      : myVec.io.idx <= VOID
@@ -854,8 +874,12 @@
 
 
 ** Stateful circuits
-   Until now every circuit we have consider has been a combinatory circuit.
-   Consider the following circuit:
+   The code for this section can be found at
+   [[./src/test/scala/Examples/basic.scala][src/test/scala/Examples/stateful.scala]]
+   
+   Apart from a brief mention in the intro, every circuit we have consider up until now has been a 
+   combinatory circuit.
+   It's time to move on to stateful circuits:
    #+begin_src scala
    class SimpleDelay() extends Module {
      val io = IO(
@@ -875,14 +899,12 @@
    Registers are driven by a clock signal in addition to the input value, and it is only 
    capable of updating its value at a clock pulse.
 
-   In some HDL languages it is necessary to include the clock signal in the modules IO, but
-   for chisel this happens implicitly.
+   In some HDL languages like Verilog and VHDL which you might have used previously, it is necessary 
+   to include the clock signal in the modules IO, but for chisel this happens implicitly.
 
    When testing we use the ~step(n)~ feature of peek poke tester which runs the clock signal n times.
    
    Test this by running ~testOnly Examples.DelaySpec~
-   The code for this is already implemented in 
-   [[./src/test/scala/Examples/basic.scala][src/test/scala/Examples/stateful.scala]]
    #+begin_src scala
    class DelaySpec extends FlatSpec with Matchers {
      behavior of "SimpleDelay"
@@ -906,6 +928,7 @@
    #+end_src
    
    In order to make it extra clear the Driver has the optional "verbose" parameter set to true.
+   This will cause the current cycle to be printed each time a step is executed.
    This yields the following:
    
    #+begin_src text
@@ -929,7 +952,7 @@
    [info] [0.005] RAN 10 CYCLES PASSED
    #+end_src
    
-   Following the output you can see how at step 0 the input is 7, then at step 1 
+   Following the output you can see how at step 0 the input is 7, then one cycle later, at step 1 
    the expected (and observed) output is 7.
 
 ** Debugging
@@ -982,6 +1005,8 @@
     Inner, however this information is no longer available once Outer is rendered into a
     circuit simulator.
     
+    Somewhat baffling this issue has persisted for five years.
+    
     To see this, run ~testOnly Example.PeekInternalSpec~
     Which throws an exception is thrown when either of the two peek statements underneath are
     run:
@@ -996,8 +1021,8 @@
     An example of this can be seen in in the bottom of printing.scala
     
     This approach leads to a lot of annoying clutter in your modules IO, so to separate business-logic
-    from debug signals it is useful to use a MultiIOModule where debug signals can be put in a separate
-    io bundle.
+    from debug signals it is useful to use a ~MultiIOModule~ instead of ~Module~ where debug signals can 
+    be put in a separate io bundle.
 
 *** printf
     ~printf~ and ~println~ must not be mixed!
@@ -1006,6 +1031,7 @@
 
     a printf statement on the other hand does not immediately print anything to the console. Instead it creates
     a special chisel element which only exists during simulation and prints to your console each clock cycle,
+    (as long as the conditional block it resides is active)
     thus helping us peer into the internal state of a circuit!
     
     Additionally, a printf statement in a conditional block will only execute if the condiditon is met,
@@ -1059,25 +1085,27 @@
     correct result, whereas the printf statement is printing the updated state of the register which
     should not be visible before next cycle.
     
-    In conclusion, do not use printf to debug timing issues, and if you do be extremely methodical.
-    
-    (It is possible to use a different simulator, treadle, which from what I have seen gives correct 
-    printf results, it can be used by supplying an extra argument in the peek poke constructor like so:
+    To fix this issue and get correct printf results, it is necessary to use a different simulator by
+    adding a "treadle" argument in your tester like this:
     ~chisel3.iotesters.Driver(() => new Outer, "treadle") { c =>~
-    Just don't bank your money on the correctness, it might fail in rare circumstances making debugging
-    a nightmare)
 
+** Waveform debugging
+   Since it is impossible to inspect internal signals it is often useful to use a waveform debugger.
+   By calling a test with the following syntax:
+   ~chisel3.iotesters.Driver.execute(Array("--generate-vcd-output", "on", "--backend-name", "treadle"), () => new Module) { c =>~
+   (simply use this to replace ~chisel3.iotesters.Driver(() => new Module) { c =>~)
+   You can now find the waveform output of your circuit simulation in
+   ~/user/home/path/to/exercise/test_run_dir/Ex0.TestYouRan$ID/SomethingSomething.vcd~ which
+   can be viewed in a waveform viewing program such as gtkwave.
+   To install gtkwave you can run ~sudo apt install gtkwave~.
+   You should familiarize yourself with gtkwave, it can prove very useful, however you should not
+   rely too much on it because it fails to scale to very large tests unless you spend time learning
+   how to use it properly.
+   
 ** Visualizing generated circuits
    While limited, it is possible to visualize your generated circuit using [[https://github.com/freechipsproject/diagrammer][diagrammer]].
    The necessary code to generate .fir file is in the main.scala file, just comment it out to generate
    these.
-   I encourage you to give it a fair shake to see if you find it useful or not.
-
-** Visualizing circuit state (Optional)
-   In order to make debugging easier it is helpful to render the state of the circuit to see where
-   errors happen.
-   A prototype for this is included in this project, read more about it here
-   [[./circuitRendering.org][Here]]
 
 ** Resources
    Chisel cheat sheet
