@@ -19,7 +19,7 @@ class SimpleDelay() extends Module {
   )
   val delayReg = RegInit(UInt(32.W), 0.U)
 
-  delayReg   := io.dataIn + 100.U
+  delayReg   := io.dataIn
   io.dataOut := delayReg
 }
 

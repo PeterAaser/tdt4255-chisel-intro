@@ -37,7 +37,7 @@ class InvalidSpec extends FlatSpec with Matchers {
 
 /**
   * Chisel errors are just regular scala Exceptions that can be caught.
-  * The test underneath shows this in practice, and is used in the tests for 
+  * The test underneath shows this in practice, and is used in the tests for
   * the exercises via the wrapTester method.
   */
 // class InvalidSpec extends FlatSpec with Matchers {
@@ -52,7 +52,7 @@ class InvalidSpec extends FlatSpec with Matchers {
 //     catch {
 //       case e: firrtl.passes.CheckInitialization.RefNotInitializedException => true
 //       case _: Throwable => false
-//     } 
+//     }
 //     passes should be(true)
 //   }
 // }
