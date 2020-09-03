@@ -2,9 +2,8 @@ This is the chisel intro for the TDT4255 course at NTNU.
 If you use it for your course, please let me know how it went and feel 
 free (or even slightly pressured) to submit pull requests with improvements.
 
-We use slack to communicate, it is very important that you join! If the slack link is expired
-and you need an invite just tell the current course superviser.
-https://join.slack.com/t/tdt4255-2020/shared_invite/zt-gcj17f7b-9fHN75cLmD1QaIH~n7csiw
+If you study at NTNU I suggest you use their fork, but I'm keeping the repo alive since I'm very proud of
+of this project and I want it on my github! <3 <3
 
 There are several separate modules for you to read through before you're ready
 to start writing code.
